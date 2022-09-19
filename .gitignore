@@ -9,8 +9,8 @@ inference_test_output
 
 /data/OCID*
 /data/tabletop
-*.png
-*.json
+# *.png
+# *.json
 *.diff
 *.jpg
 !/projects/DensePose/doc/images/*.jpg
