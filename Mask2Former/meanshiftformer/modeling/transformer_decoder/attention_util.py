@@ -23,7 +23,7 @@ import warnings
 
 
 # Hyperparameter for vMF distribution
-KAPPA = 50 #default 20.  30
+KAPPA = 30 #default 20.  30
 
 # _exp_dot_product_attention
 # in the future, make kappa_weight learnable. For now, it is 0.
@@ -31,7 +31,7 @@ def hypersphere_attention(
     q: Tensor,
     k: Tensor,
     v: Tensor,
-    kappa_weight,
+    #kappa_weight,
     attn_mask: Optional[Tensor] = None,
     dropout_p: float = 0.0,
     kappa: float = KAPPA,
@@ -215,7 +215,7 @@ def hypersphere_attention_forward(
     key_padding_mask: Optional[Tensor] = None,
     need_weights: bool = True,
     attn_mask: Optional[Tensor] = None,
-    kappa_weight: Optional[Tensor] = None,
+    #kappa_weight: Optional[Tensor] = None,
     use_separate_proj_weight: bool = False,
     q_proj_weight: Optional[Tensor] = None,
     k_proj_weight: Optional[Tensor] = None,
@@ -422,7 +422,7 @@ def hypersphere_attention_forward(
     #
     # (deep breath) calculate attention and out projection
     #
-    attn_output, attn_output_weights = hypersphere_attention(q, k, v, kappa_weight, attn_mask, dropout_p)
+    attn_output, attn_output_weights = hypersphere_attention(q, k, v, attn_mask, dropout_p)
     attn_output = attn_output.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)
     attn_output = F.linear(attn_output, out_proj_weight, out_proj_bias)
 
@@ -472,7 +472,7 @@ class MeanShiftAttention(nn.MultiheadAttention):
                  kdim=None, vdim=None, batch_first=False, device=None, dtype=None) -> None:
         factory_kwargs = {'device': device, 'dtype': dtype}
         super(MeanShiftAttention, self).__init__(embed_dim, num_heads)
-        self.kappa_weight = Parameter(torch.rand(1, **factory_kwargs))
+        #self.kappa_weight = Parameter(torch.rand(1, **factory_kwargs))
         #self.linear_kappa = nn.Linear(1, 1, **factory_kwargs)
 
         # self.embed_dim = embed_dim
@@ -566,7 +566,7 @@ class MeanShiftAttention(nn.MultiheadAttention):
                 key_padding_mask=key_padding_mask, need_weights=need_weights,
                 attn_mask=attn_mask, use_separate_proj_weight=True,
                 q_proj_weight=self.q_proj_weight, k_proj_weight=self.k_proj_weight,
-                v_proj_weight=self.v_proj_weight, kappa_weight=self.kappa_weight)
+                v_proj_weight=self.v_proj_weight) #, kappa_weight=self.kappa_weight)
         else:
             attn_output, attn_output_weights = hypersphere_attention_forward(
                 query, key, value, self.embed_dim, self.num_heads,
@@ -575,7 +575,7 @@ class MeanShiftAttention(nn.MultiheadAttention):
                 self.dropout, self.out_proj.weight, self.out_proj.bias,
                 training=self.training,
                 key_padding_mask=key_padding_mask, need_weights=need_weights,
-                attn_mask=attn_mask, kappa_weight=self.kappa_weight)
+                attn_mask=attn_mask) #, kappa_weight=self.kappa_weight)
         if self.batch_first:
             return attn_output.transpose(1, 0), attn_output_weights
         else:
