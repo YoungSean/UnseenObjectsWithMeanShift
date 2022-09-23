@@ -38,12 +38,12 @@ def parse_args():
                         default=0, type=int)
     parser.add_argument('--pretrained', dest='pretrained',
                         help='initialize with pretrained checkpoint',
-                        default=None, type=str)
+                        default='data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth', type=str)
     parser.add_argument('--pretrained_crop', dest='pretrained_crop',
                         help='initialize with pretrained checkpoint for crops',
-                        default=None, type=str)
+                        default='data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth', type=str)
     parser.add_argument('--cfg', dest='cfg_file',
-                        help='optional config file', default=None, type=str)
+                        help='optional config file', default='experiments/cfgs/seg_resnet34_8s_embedding_cosine_rgbd_add_tabletop.yml', type=str)
     parser.add_argument('--dataset', dest='dataset_name',
                         help='dataset to train on',
                         default='shapenet_scene_train', type=str)
@@ -61,7 +61,7 @@ def parse_args():
                         action='store_true')
     parser.add_argument('--network', dest='network_name',
                         help='name of the network',
-                        default=None, type=str)
+                        default="seg_resnet34_8s_embedding", type=str)
     parser.add_argument('--image_path', dest='image_path',
                         help='path to images', default=None, type=str)
 
@@ -187,6 +187,9 @@ if __name__ == '__main__':
         camera_params = None
 
     # prepare network
+    args.pretrained = "data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
+    args.pretrained_crop = "data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
+    args.network_name = "seg_resnet34_8s_embedding"
     if args.pretrained:
         network_data = torch.load(args.pretrained)
         print("=> using pre-trained network '{}'".format(args.pretrained))
