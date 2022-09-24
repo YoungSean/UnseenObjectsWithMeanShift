@@ -296,10 +296,17 @@ def setup(args):
     # cfg.merge_from_list(args.opts)
     # cfg.SOLVER.MAX_ITER = 4000
     # cfg.SOLVER.CHECKPOINT_PERIOD = 1000
+    cfg.MODEL.SEM_SEG_HEAD.NAME = "PretrainedMeanShiftMaskFormerHead"
+    cfg.MODEL.SEM_SEG_HEAD.PIXEL_DECODER_NAME = "SimpleBasePixelDecoder"
+    cfg.MODEL.SEM_SEG_HEAD.IN_FEATURES = ["res5", ]
+    cfg.MODEL.SEM_SEG_HEAD.CONVS_DIM = 64
+    cfg.MODEL.META_ARCHITECTURE = "PretrainedMeanShiftMaskFormer"
+    cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
+    cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME = "PretrainedMeanShiftTransformerDecoder"
     cfg.OUTPUT_DIR = "./output_0923_kappa30"
     # cfg.MODEL.WEIGHTS = "./ms_output_RGB_embedding_loss/model_0001999.pth"
     cfg.MODEL.WEIGHTS = ""
-    cfg.SOLVER.MAX_ITER = 4
+    cfg.SOLVER.MAX_ITER = 4000
     #cfg.SOLVER.CHECKPOINT_PERIOD = 1000
     cfg.freeze()
     default_setup(cfg, args)

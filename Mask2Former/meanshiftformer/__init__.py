@@ -20,6 +20,7 @@ from .data.dataset_mappers.mask_former_semantic_dataset_mapper import (
 
 # models
 from .meanshiftformer_model import MeanShiftMaskFormer
+from .pretrained_meanshiftformer_model import PretrainedMeanShiftMaskFormer
 from .test_time_augmentation import SemanticSegmentorWithTTA
 
 # evaluation

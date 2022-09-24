@@ -1,4 +1,11 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
+import os, sys
+sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'lib'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
+from get_network import get_backbone
+
 from typing import Tuple
 
 import torch
@@ -18,6 +25,7 @@ from .modeling.matcher import HungarianMatcher
 
 from .embedding import EmbeddingLoss
 import numpy as np
+
 
 def combine_masks(gt_masks):
     """
@@ -39,7 +47,7 @@ def combine_masks(gt_masks):
     return bin_mask
 
 @META_ARCH_REGISTRY.register()
-class MeanShiftMaskFormer(nn.Module):
+class PretrainedMeanShiftMaskFormer(nn.Module):
     """
     Main class for mask classification semantic segmentation architectures.
     """
@@ -129,6 +137,8 @@ class MeanShiftMaskFormer(nn.Module):
 
         if not self.semantic_on:
             assert self.sem_seg_postprocess_before_inference
+        self.pretrained_backbone = get_backbone()
+        self.pretrained_backbone.to(self.device)
 
     @classmethod
     def from_config(cls, cfg):
@@ -238,13 +248,22 @@ class MeanShiftMaskFormer(nn.Module):
                         Each dict contains keys "id", "category_id", "isthing".
         """
         images = [x["image"].to(self.device) for x in batched_inputs]
+        pixel_mean = torch.tensor(np.array([[[102.9801, 115.9465, 122.7717]]]) / 255.0).float()
         images = [(x - self.pixel_mean) / self.pixel_std for x in images]
+        #images = torch.stack(images, dim=0)
         images = ImageList.from_tensors(images, self.size_divisibility)
 
-        features = self.backbone(images.tensor)
-        #print("images tensor", images.tensor.shape)
-        #print("features, ", features['res2'].shape)
-        outputs, last_feature_map = self.sem_seg_head(features, images.tensor.shape[-2], images.tensor.shape[-1])
+        images_depth = [x["depth"].to(self.device) for x in batched_inputs]
+        #images_depth = torch.stack(images_depth, dim=0)
+        images_depth = ImageList.from_tensors(images_depth, self.size_divisibility)
+        #features = self.backbone(images.tensor)
+        features = self.pretrained_backbone(images.tensor, None, images_depth.tensor).detach()
+        norm_features = F.normalize(features, p=2, dim=1)
+        new_features = {}
+        new_features['res5'] = norm_features
+        # features['res4'] = norm_features
+        # features['res3'] = norm_features
+        outputs, last_feature_map = self.sem_seg_head(new_features, images.tensor.shape[-2], images.tensor.shape[-1])
         # print(last_feature_map.shape)
 
         if self.training:

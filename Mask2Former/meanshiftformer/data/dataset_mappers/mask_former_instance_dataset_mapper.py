@@ -102,6 +102,10 @@ class MaskFormerInstanceDatasetMapper:
         aug_input, transforms = T.apply_transform_gens(self.tfm_gens, aug_input)
         image = aug_input.image
 
+        # # deal with depth images like RGB images
+        depth = dataset_dict["raw_depth"]
+        # now we get the depth whose transforms is the same as RGB images
+        depth = transforms.apply_image(depth)
         # also transform the label
 
         orig_label = dataset_dict["label"]
@@ -150,6 +154,7 @@ class MaskFormerInstanceDatasetMapper:
 
         # Pad image and segmentation label here!
         image = torch.as_tensor(np.ascontiguousarray(image.transpose(2, 0, 1)))
+        depth = torch.as_tensor(np.ascontiguousarray(depth.transpose(2, 0, 1)))
         masks = [torch.from_numpy(np.ascontiguousarray(x)) for x in masks]
 
         label = torch.as_tensor(np.ascontiguousarray(label.transpose(2, 0, 1)))
@@ -167,6 +172,7 @@ class MaskFormerInstanceDatasetMapper:
             ]
             # pad image
             image = F.pad(image, padding_size, value=128).contiguous()
+            depth = F.pad(depth, padding_size, value=128).contiguous()
             # pad label
             label = F.pad(label, padding_size, value=128).contiguous()
             # pad mask
@@ -179,6 +185,7 @@ class MaskFormerInstanceDatasetMapper:
         # Therefore it's important to use torch.Tensor.
         dataset_dict["image"] = image
         dataset_dict["label"] = label.to(torch.float)
+        dataset_dict["depth"] = depth
 
         # Prepare per-category binary masks
         instances = Instances(image_shape)

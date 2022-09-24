@@ -1,6 +1,6 @@
 def add_tabletop_config(cfg):
     #cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
-    cfg.SOLVER.IMS_PER_BATCH = 4 #8,64,16
+    cfg.SOLVER.IMS_PER_BATCH = 1 #8,64,16
     cfg.INPUT.MASK_FORMAT = "bitmask"  # alternative: "polygon"
     cfg.MODEL.MASK_ON = True
     cfg.DATASETS.TRAIN = ("tabletop_object_train",)

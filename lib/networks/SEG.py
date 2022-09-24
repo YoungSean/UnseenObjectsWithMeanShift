@@ -112,12 +112,12 @@ class SEGNET(nn.Module):
         # normalization
         if self.normalize:
             features = F.normalize(features, p=2, dim=1)
-        if self.training:
-            loss, intra_cluster_loss, inter_cluster_loss = self.embedding_loss(features, label)
-            return loss, intra_cluster_loss, inter_cluster_loss, features
-        else:
-            return features
-
+        # if self.training:
+        #     loss, intra_cluster_loss, inter_cluster_loss = self.embedding_loss(features, label)
+        #     return loss, intra_cluster_loss, inter_cluster_loss, features
+        # else:
+        #     return features
+        return features
 
     def weight_parameters(self):
         return [param for name, param in self.named_parameters() if 'weight' in name]

@@ -41,12 +41,21 @@ cfg.merge_from_file(cfg_file)
 add_tabletop_config(cfg)
 cfg.SOLVER.IMS_PER_BATCH = 1 #
 # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/output_RGB/model_0004999.pth"
-
+# for pretrained mean shift
+cfg.MODEL.SEM_SEG_HEAD.NAME = "PretrainedMeanShiftMaskFormerHead"
+cfg.MODEL.SEM_SEG_HEAD.PIXEL_DECODER_NAME = "SimpleBasePixelDecoder"
+cfg.MODEL.SEM_SEG_HEAD.IN_FEATURES = ["res5", ]
+cfg.MODEL.SEM_SEG_HEAD.CONVS_DIM = 64
+cfg.MODEL.META_ARCHITECTURE = "PretrainedMeanShiftMaskFormer"
+cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
+cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME = "PretrainedMeanShiftTransformerDecoder"
+cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD'
 # arguments frequently tuned
 cfg.TEST.DETECTIONS_PER_IMAGE = 20
 cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = 2
 # cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD' #"RGBD_ADD" #'DEPTH'
-weight_path = "../../Mask2Former/output_0913_kappa50/model_final.pth"#"output_no_embed_masked_learnable_quries_nhead1_3deform/model_final.pth"
+weight_path = "../../Mask2Former/output_0923_kappa30/model_final.pth"
+#weight_path = "../../Mask2Former/output_0913_kappa50/model_final.pth"#"output_no_embed_masked_learnable_quries_nhead1_3deform/model_final.pth"
 #"ms_output_RGB_embed_and_multi_scales/model_final.pth"#"ms_output_RGB_embedding_loss/model_final.pth"
 #"../../Mask2Former/ms_output_RGB/model_final.pth"
 # depth_n2_R50_0730/model_0179374.pth
@@ -64,7 +73,7 @@ weight_path = "../../Mask2Former/output_0913_kappa50/model_final.pth"#"output_no
 
 
 dataset = TableTopDataset(data_mapper=True,eval=True)
-#ocid_dataset = OCIDDataset(image_set="test")
+ocid_dataset = OCIDDataset(image_set="test")
 
 use_my_dataset = True
 for d in ["train", "test"]:
@@ -85,10 +94,12 @@ from topk_test_utils import Predictor_RGBD, test_dataset, test_sample
 cfg.MODEL.WEIGHTS = weight_path
 predictor = Predictor_RGBD(cfg)
 #test_sample(cfg, ocid_dataset[4], predictor, visualization=True)
-#test_sample(cfg, dataset[3], predictor, visualization=False)
-test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
-test_dataset(cfg, dataset, predictor, visualization=False, topk=True)
+# test_sample(cfg, dataset[3], predictor, visualization=True)
+# test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
+# test_dataset(cfg, dataset, predictor, visualization=False, topk=True)
 
+for i in range(40):
+    test_sample(cfg, ocid_dataset[i], predictor, visualization=True)
 # OCID dataset
-#test_dataset(cfg, ocid_dataset, predictor, visualization=True)
+#test_dataset(cfg, ocid_dataset, predictor, visualization=False)
 #test_dataset(cfg, ocid_dataset, predictor, visualization=True, topk=False, confident_score=0.9)

@@ -19,6 +19,29 @@ from fcn.config import cfg, cfg_from_file, get_output_dir
 import networks
 from utils.blob import pad_im
 from utils import mask as util_
+
+sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+def get_backbone():
+    num_classes = 2
+    pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
+    pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
+    network_name = "seg_resnet34_8s_embedding"
+    if pretrained:
+        network_data = torch.load(pretrained)
+        print("=> using pre-trained network '{}'".format(pretrained))
+    else:
+        network_data = None
+        print("no pretrained network specified")
+        sys.exit()
+
+    network = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data).cuda()
+    # network = torch.nn.DataParallel(network, device_ids=[0]).cuda()
+    cudnn.benchmark = True
+    # network.eval()
+    for param in network.parameters():
+        param.requires_grad = False
+    return network
 # save data
 def save_data(file_rgb, out_label_refined, roi, features_crop):
 
@@ -80,67 +103,72 @@ def read_sample(filename_color, filename_depth, camera_params):
 
     return sample
 
-num_classes = 2
-pretrained = "data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
-pretrained_crop = "data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
-network_name = "seg_resnet34_8s_embedding"
-if pretrained:
-    network_data = torch.load(pretrained)
-    print("=> using pre-trained network '{}'".format(pretrained))
-else:
-    network_data = None
-    print("no pretrained network specified")
-    sys.exit()
-
-network = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data).cuda()
-network = torch.nn.DataParallel(network, device_ids=[0]).cuda()
-cudnn.benchmark = True
-network.eval()
-
-#get images
-images_color = []
-filename = os.path.join("data/demo", "*-color.png")
-files = glob.glob(filename)
-for i in range(len(files)):
-    filename = files[i]
-    images_color.append(filename)
-images_color.sort()
-
-images_depth = []
-filename = os.path.join("data/demo", "*-depth.png")
-files = glob.glob(filename)
-for i in range(len(files)):
-    filename = files[i]
-    images_depth.append(filename)
-images_depth.sort()
-
-# check if intrinsics available
-filename = os.path.join("data/demo", 'camera_params.json')
-if os.path.exists(filename):
-    with open(filename) as f:
-        camera_params = json.load(f)
-else:
-    camera_params = None
-
-index_images = range(len(images_color))
-for i in index_images:
-    if os.path.exists(images_color[i]):
-        print(images_color[i])
-        # read sample
-        sample = read_sample(images_color[i], images_depth[i], camera_params)
-        # construct input
-        image = sample['image_color'].cuda()
-        if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
-            depth = sample['depth'].cuda()
-        else:
-            depth = None
-
-        if 'label' in sample:
-            label = sample['label'].cuda()
-        else:
-            label = None
-
-        # get features
-        features = network(image, label, depth).detach()
-print(images_color)
+#get_backbone()
+#
+# num_classes = 2
+# pretrained = "data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
+# pretrained_crop = "data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
+# network_name = "seg_resnet34_8s_embedding"
+# if pretrained:
+#     network_data = torch.load(pretrained)
+#     print("=> using pre-trained network '{}'".format(pretrained))
+# else:
+#     network_data = None
+#     print("no pretrained network specified")
+#     sys.exit()
+#
+# network = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data).cuda()
+# # network = torch.nn.DataParallel(network, device_ids=[0]).cuda()
+# cudnn.benchmark = True
+# network.eval()
+# for param in network.parameters():
+#     param.requires_grad = False
+#
+# #get images
+# images_color = []
+# filename = os.path.join("data/demo", "*-color.png")
+# files = glob.glob(filename)
+# for i in range(len(files)):
+#     filename = files[i]
+#     images_color.append(filename)
+# images_color.sort()
+#
+# images_depth = []
+# filename = os.path.join("data/demo", "*-depth.png")
+# files = glob.glob(filename)
+# for i in range(len(files)):
+#     filename = files[i]
+#     images_depth.append(filename)
+# images_depth.sort()
+#
+# # check if intrinsics available
+# filename = os.path.join("data/demo", 'camera_params.json')
+# if os.path.exists(filename):
+#     with open(filename) as f:
+#         camera_params = json.load(f)
+# else:
+#     camera_params = None
+#
+# index_images = range(len(images_color))
+# for i in index_images:
+#     if os.path.exists(images_color[i]):
+#         print(images_color[i])
+#         # read sample
+#         sample = read_sample(images_color[i], images_depth[i], camera_params)
+#         # construct input
+#         image = sample['image_color'].cuda()
+#         if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
+#             depth = sample['depth'].cuda()
+#         else:
+#             depth = None
+#
+#         if 'label' in sample:
+#             label = sample['label'].cuda()
+#         else:
+#             label = None
+#
+#         # get features
+#         features = network(image, label, depth).detach()
+# print(images_color)
 #features = network(image, label, depth).detach()
+
