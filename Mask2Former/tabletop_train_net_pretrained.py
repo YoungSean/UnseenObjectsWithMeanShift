@@ -303,10 +303,11 @@ def setup(args):
     cfg.MODEL.META_ARCHITECTURE = "PretrainedMeanShiftMaskFormer"
     cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
     cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME = "PretrainedMeanShiftTransformerDecoder"
-    cfg.OUTPUT_DIR = "./output_0923_kappa30"
+    cfg.OUTPUT_DIR = "./output_0929_64featuremap"
+    cfg.MODEL.SEM_SEG_HEAD.MASK_DIM = 64 # when we use the original last feature map instead of Mask features
     # cfg.MODEL.WEIGHTS = "./ms_output_RGB_embedding_loss/model_0001999.pth"
     cfg.MODEL.WEIGHTS = ""
-    cfg.SOLVER.MAX_ITER = 4000
+    cfg.SOLVER.MAX_ITER = 3000
     #cfg.SOLVER.CHECKPOINT_PERIOD = 1000
     cfg.freeze()
     default_setup(cfg, args)

@@ -53,8 +53,9 @@ cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD'
 # arguments frequently tuned
 cfg.TEST.DETECTIONS_PER_IMAGE = 20
 cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = 2
+cfg.MODEL.SEM_SEG_HEAD.MASK_DIM = 64 # when we use the original last feature map instead of Mask features
 # cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD' #"RGBD_ADD" #'DEPTH'
-weight_path = "../../Mask2Former/output_0923_kappa30/model_final.pth"
+weight_path = "../../Mask2Former/output_0929_64featuremap/model_final.pth"
 #weight_path = "../../Mask2Former/output_0913_kappa50/model_final.pth"#"output_no_embed_masked_learnable_quries_nhead1_3deform/model_final.pth"
 #"ms_output_RGB_embed_and_multi_scales/model_final.pth"#"ms_output_RGB_embedding_loss/model_final.pth"
 #"../../Mask2Former/ms_output_RGB/model_final.pth"
@@ -95,11 +96,11 @@ cfg.MODEL.WEIGHTS = weight_path
 predictor = Predictor_RGBD(cfg)
 #test_sample(cfg, ocid_dataset[4], predictor, visualization=True)
 # test_sample(cfg, dataset[3], predictor, visualization=True)
-# test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
-# test_dataset(cfg, dataset, predictor, visualization=False, topk=True)
+test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
+test_dataset(cfg, dataset, predictor, visualization=False, topk=True)
 
-for i in range(40):
-    test_sample(cfg, ocid_dataset[i], predictor, visualization=True)
+# for i in range(40):
+#     test_sample(cfg, ocid_dataset[i], predictor, visualization=True)
 # OCID dataset
 #test_dataset(cfg, ocid_dataset, predictor, visualization=False)
 #test_dataset(cfg, ocid_dataset, predictor, visualization=True, topk=False, confident_score=0.9)

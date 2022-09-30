@@ -781,7 +781,7 @@ class PretrainedMeanShiftTransformerDecoder(nn.Module):
         self.use_meanshift_self_attention = use_meanshift_self_attention
         # decide if normalize after each decoder block
         self.decoder_block_norm = decoder_block_norm
-        self.normalize_before_mask = False
+        self.normalize_before_mask = True  # normalize the mask features and cluster centers
         # set decoder order
         self.small2large = False  # If True, first use samll feature maps several times, then use larger one
 
@@ -994,7 +994,7 @@ class PretrainedMeanShiftTransformerDecoder(nn.Module):
                                                                                        attn_mask_target_size=size_list[(i+1) // freq_of_each_feature_map] if i != 8 else size_list[0])
             else:
                 outputs_class, outputs_mask, attn_mask = self.forward_prediction_heads(output, mask_features,
-                                                                                   attn_mask_target_size=size_list[(i + 1) % self.num_feature_levels])
+                                                                                   attn_mask_target_size=size_list[(i + 1) % self.num_feature_levels], normalize_before_mask=(i==self.num_layers-1))
             predictions_class.append(outputs_class)
             predictions_mask.append(outputs_mask)
 
@@ -1009,14 +1009,14 @@ class PretrainedMeanShiftTransformerDecoder(nn.Module):
         }
         return out
 
-    def forward_prediction_heads(self, output, mask_features, attn_mask_target_size):
+    def forward_prediction_heads(self, output, mask_features, attn_mask_target_size, normalize_before_mask=False):
         decoder_output = self.decoder_norm(output)
         decoder_output = decoder_output.transpose(0, 1)
         outputs_class = self.class_embed(decoder_output)
         mask_embed = self.mask_embed(decoder_output)
-        if self.normalize_before_mask:
-            mask_embed = F.normalize(mask_embed, dim=-1) * mask_norm_kappa
-            mask_features = F.normalize(mask_features, dim=-1)
+        if normalize_before_mask:  # we only normalize before the final prediction
+            mask_embed = F.normalize(mask_embed, dim=-1)
+            mask_features = F.normalize(mask_features, dim=1)
         outputs_mask = torch.einsum("bqc,bchw->bqhw", mask_embed, mask_features)
 
         if self.disable_attention_mask:
