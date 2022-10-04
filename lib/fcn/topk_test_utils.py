@@ -1,5 +1,8 @@
 import sys
 import os
+
+from fcn.test_dataset import filter_labels_depth, crop_rois, clustering_features, match_label_crop
+
 #print(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -138,6 +141,7 @@ class Predictor_RGBD(DefaultPredictor):
             transforms = self.aug.get_transform(original_image)
             image = transforms.apply_image(original_image)
             image = torch.as_tensor(image.astype("float32").transpose(2, 0, 1))
+            #image = torch.as_tensor(original_image.astype("float32").transpose(2, 0, 1))
             inputs = {"image": image, "height": height, "width": width}
 
             if self.cfg.INPUT.INPUT_IMAGE == "DEPTH" or "RGBD" in self.cfg.INPUT.INPUT_IMAGE:
@@ -146,8 +150,6 @@ class Predictor_RGBD(DefaultPredictor):
                 depth_image = torch.as_tensor(depth_image.astype("float32").transpose(2, 0, 1))
                 depth = depth_image
                 inputs["depth"] = depth
-
-
 
             predictions = self.model([inputs])[0]
             return predictions
@@ -181,6 +183,66 @@ def test_sample(cfg, sample, predictor, visualization = False, topk=True, confid
         # cv2.waitKey(100000)
         cv2.destroyAllWindows()
     return metrics
+
+def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4):
+    image = sample['image_color'].cuda()
+    im = cv2.imread(sample["file_name"])
+    if "label" in sample.keys():
+        gt = sample["label"].squeeze().numpy()
+    else:
+        gt = sample["labels"].squeeze().numpy()
+    label = torch.from_numpy(gt).unsqueeze(dim=0).cuda()
+
+    # if cfg.INPUT.INPUT_IMAGE == "DEPTH":
+    #     outputs = predictor(sample["raw_depth"])
+    # else:
+    #     outputs = predictor(im)
+    if cfg.INPUT.INPUT_IMAGE == 'DEPTH' or 'RGBD' in cfg.INPUT.INPUT_IMAGE:
+        depth = sample['depth'].cuda()
+    else:
+        depth = None
+    outputs = predictor(sample)
+    confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
+                                                  num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
+                                                  low_threshold=low_threshold)
+    binary_mask = combine_masks(confident_instances)
+
+    if visualization:
+        v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
+        out = v.draw_instance_predictions(confident_instances.to("cpu"))
+        visual_result = out.get_image()[:, :, ::-1]
+        # cv2.imwrite(sample["file_name"][-6:-3]+"pred.png", visual_result)
+        cv2.imshow("image", visual_result)
+        cv2.waitKey(0)
+        # cv2.waitKey(100000)
+        cv2.destroyAllWindows()
+
+    out_label = torch.as_tensor(binary_mask).unsqueeze(dim=0).cuda()
+    if len(depth.shape) == 3:
+        depth = torch.unsqueeze(depth, dim=0)
+    if len(image.shape) == 3:
+        image = torch.unsqueeze(image, dim=0)
+    if depth is not None:
+        # filter labels on zero depth
+        out_label = filter_labels_depth(out_label, depth, 0.5)
+
+    # zoom in refinement
+    out_label_refined = None
+    if network_crop is not None:
+        rgb_crop, out_label_crop, rois, depth_crop = crop_rois(image, out_label.clone(), depth)
+        if rgb_crop.shape[0] > 0:
+            features_crop = network_crop(rgb_crop, out_label_crop, depth_crop)
+            labels_crop, selected_pixels_crop = clustering_features(features_crop)
+            out_label_refined, labels_crop = match_label_crop(out_label, labels_crop.cuda(), out_label_crop, rois, depth_crop)
+            out_label_refined = out_label_refined.squeeze(dim=0).cpu().numpy()
+    #metrics2 = multilabel_metrics(out_label_refined, gt)
+    prediction = out_label.squeeze().detach().cpu().numpy()
+    if out_label_refined is not None:
+        prediction_refined = out_label_refined
+    else:
+        prediction_refined = prediction.copy()
+    metrics_refined = multilabel_metrics(prediction_refined, gt)
+    return metrics_refined
 
 def test_dataset(cfg,dataset, predictor, visualization=False, topk=True, confident_score=0.9, low_threshold=0.4):
     metrics_all = []
@@ -223,6 +285,46 @@ def test_dataset(cfg,dataset, predictor, visualization=False, topk=True, confide
     print(result)
     print('====================END=================================')
 
+def test_dataset_crop(cfg,dataset, predictor, network_crop, visualization=False, topk=True, confident_score=0.9, low_threshold=0.4):
+    metrics_all = []
+    for i in trange(len(dataset)):
+        metrics = test_sample_crop(cfg, dataset[i], predictor, network_crop, visualization=visualization,
+                              topk=topk, confident_score=confident_score, low_threshold=low_threshold)
+        metrics_all.append(metrics)
+    # for i in tqdm(dataset):
+    #     metrics = test_sample(i, predictor, visualization=visualization)
+    #     metrics_all.append(metrics)
+    print('========================================================')
+    if not topk:
+        print("Mask threshold: ", confident_score)
+    else:
+        print(f"We first pick top {cfg.TEST.DETECTIONS_PER_IMAGE} instances ")
+        print(f"and get those whose class confidence > {low_threshold}.")
+
+    print("weight: ", cfg.MODEL.WEIGHTS)
+    result = {}
+    num = len(metrics_all)
+    print('%d images' % num)
+    print('========================================================')
+    for metrics in metrics_all:
+        for k in metrics.keys():
+            result[k] = result.get(k, 0) + metrics[k]
+
+    for k in sorted(result.keys()):
+        result[k] /= num
+        print('%s: %f' % (k, result[k]))
+
+    print('%.6f' % (result['Objects Precision']))
+    print('%.6f' % (result['Objects Recall']))
+    print('%.6f' % (result['Objects F-measure']))
+    print('%.6f' % (result['Boundary Precision']))
+    print('%.6f' % (result['Boundary Recall']))
+    print('%.6f' % (result['Boundary F-measure']))
+    print('%.6f' % (result['obj_detected_075_percentage']))
+
+    print('========================================================')
+    print(result)
+    print('====================END=================================')
 def test_dataset_with_weight(weight_path, cfg, dataset,topk=True, confident_score=0.9):
     cfg.MODEL.WEIGHTS = weight_path
     predictor = Predictor_RGBD(cfg)

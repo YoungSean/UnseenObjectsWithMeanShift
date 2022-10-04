@@ -108,16 +108,16 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
             test_topk_per_image: int, instance segmentation parameter, keep topk instances per image
         """
         super().__init__()
-        self.backbone = backbone
+        # self.backbone = backbone
         self.sem_seg_head = sem_seg_head
         self.criterion = criterion
         self.num_queries = num_queries
         self.overlap_threshold = overlap_threshold
         self.object_mask_threshold = object_mask_threshold
         self.metadata = metadata
-        if size_divisibility < 0:
-            # use backbone size_divisibility if not set
-            size_divisibility = self.backbone.size_divisibility
+        # if size_divisibility < 0:
+        #     # use backbone size_divisibility if not set
+        #     size_divisibility = self.backbone.size_divisibility
         self.size_divisibility = size_divisibility
         self.sem_seg_postprocess_before_inference = sem_seg_postprocess_before_inference
         self.register_buffer("pixel_mean", torch.Tensor(pixel_mean).view(-1, 1, 1), False)
@@ -248,8 +248,9 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
                         Each dict contains keys "id", "category_id", "isthing".
         """
         images = [x["image"].to(self.device) for x in batched_inputs]
-        pixel_mean = torch.tensor(np.array([[[102.9801, 115.9465, 122.7717]]]) / 255.0).float()
+        #pixel_mean = torch.tensor(np.array([[[102.9801, 115.9465, 122.7717]]]) / 255.0).float()
         images = [(x - self.pixel_mean) / self.pixel_std for x in images]
+        #images = [(x - self.pixel_mean / 255.0) for x in images]
         #images = torch.stack(images, dim=0)
         images = ImageList.from_tensors(images, self.size_divisibility)
 
@@ -257,7 +258,10 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         #images_depth = torch.stack(images_depth, dim=0)
         images_depth = ImageList.from_tensors(images_depth, self.size_divisibility)
         #features = self.backbone(images.tensor)
-        features = self.pretrained_backbone(images.tensor, None, images_depth.tensor).detach()
+        if self.use_embedding_loss:
+            features = self.pretrained_backbone(images.tensor, None, images_depth.tensor)
+        else:
+            features = self.pretrained_backbone(images.tensor, None, images_depth.tensor).detach()
         norm_features = F.normalize(features, p=2, dim=1)
         new_features = {}
         new_features['res5'] = norm_features
@@ -275,23 +279,17 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
                 targets = None
 
             # bipartite matching-based loss
-            #print("pred: \n", outputs)
-            #print("ground truth: \n", targets)
-
-            # print("embedding loss: ", emdedding_loss)
-            # print("inter loss", inter_cluster_loss)
-            # print("intra loss: ", intra_cluster_loss)
             # Mask2Former loss
             losses = self.criterion(outputs, targets)
             # add embedding loss
             if self.use_embedding_loss:
-                last_feature_map = F.normalize(last_feature_map, p=2, dim=1)
+                features = F.normalize(features, p=2, dim=1)
                 # get the labels for loss
                 labels = [x["label"].to(self.device) for x in batched_inputs]
                 labels = ImageList.from_tensors(labels, self.size_divisibility)
                 labels = labels.tensor
                 # contrastive loss
-                emdedding_loss, intra_cluster_loss, inter_cluster_loss = self.embedding_loss(last_feature_map, labels)
+                emdedding_loss, intra_cluster_loss, inter_cluster_loss = self.embedding_loss(features, labels)
                 losses["embedding_loss"] = emdedding_loss
                 self.criterion.weight_dict["embedding_loss"] = self.embedding_loss_weight
             # print("losses", losses)

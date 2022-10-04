@@ -1,5 +1,8 @@
 import sys
 import os
+
+import networks
+
 #print(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -27,7 +30,24 @@ from tabletop_config import add_tabletop_config
 from torch.utils.data import DataLoader
 # ignore some warnings
 import warnings
+import torch
+from config import cfg
 warnings.simplefilter("ignore", UserWarning)
+
+# get network crop
+cfg.device = "cuda:0"
+num_classes = 2
+pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
+pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
+network_name = "seg_resnet34_8s_embedding"
+
+if pretrained_crop:
+    network_data_crop = torch.load(pretrained_crop)
+    network_crop = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda()
+    network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda()
+    network_crop.eval()
+else:
+    network_crop = None
 
 
 # build model
@@ -36,38 +56,21 @@ add_deeplab_config(cfg)
 #add_maskformer2_config(cfg)
 add_meanshiftformer_config(cfg)
 #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
-cfg_file = "../../Mask2Former/configs/coco_ms/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
+cfg_file = "../../Mask2Former/configs/coco_ms/instance-segmentation/tabeltop_pretrained.yaml"
 cfg.merge_from_file(cfg_file)
 add_tabletop_config(cfg)
 cfg.SOLVER.IMS_PER_BATCH = 1 #
 # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/output_RGB/model_0004999.pth"
-# for pretrained mean shift
-cfg.MODEL.SEM_SEG_HEAD.NAME = "PretrainedMeanShiftMaskFormerHead"
-cfg.MODEL.SEM_SEG_HEAD.PIXEL_DECODER_NAME = "SimpleBasePixelDecoder"
-cfg.MODEL.SEM_SEG_HEAD.IN_FEATURES = ["res5", ]
-cfg.MODEL.SEM_SEG_HEAD.CONVS_DIM = 64
-cfg.MODEL.META_ARCHITECTURE = "PretrainedMeanShiftMaskFormer"
 cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
-cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME = "PretrainedMeanShiftTransformerDecoder"
+# cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME = "PretrainedMeanShiftTransformerDecoder"
 cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD'
 # arguments frequently tuned
 cfg.TEST.DETECTIONS_PER_IMAGE = 20
-cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = 2
-cfg.MODEL.SEM_SEG_HEAD.MASK_DIM = 64 # when we use the original last feature map instead of Mask features
-# cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD' #"RGBD_ADD" #'DEPTH'
-weight_path = "../../Mask2Former/output_0929_64featuremap/model_final.pth"
-#weight_path = "../../Mask2Former/output_0913_kappa50/model_final.pth"#"output_no_embed_masked_learnable_quries_nhead1_3deform/model_final.pth"
-#"ms_output_RGB_embed_and_multi_scales/model_final.pth"#"ms_output_RGB_embedding_loss/model_final.pth"
-#"../../Mask2Former/ms_output_RGB/model_final.pth"
-# depth_n2_R50_0730/model_0179374.pth
-#"depth_n2_R50_0730/model_0052499.pth"
-#"rgbdadd_R50_lr4_4000/model_final.pth"
-#depth_n2_R50_0730/model_0052499.pth
-# #depth_output_n80/model_0080499.pth
-# #"output_RGB_n2/model_final.pth"#"output_RGB/model_final.pth"
-#weight_path = "../../Mask2Former/output_RGB_n2/model_final.pth"
-#cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD'
+#cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = 2
 
+# cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD' #"RGBD_ADD" #'DEPTH'
+weight_path = "../../Mask2Former/output_0923_kappa30/model_0139999.pth"
+#weight_path = "../../Mask2Former/output_0923_kappa30/model_0139999.pth"
 
 
 # test_dataset(dataset, predictor)
@@ -88,19 +91,23 @@ for d in ["train", "test"]:
         MetadataCatalog.get("tabletop_object_" + d).set(thing_classes=['background', 'object'])
 metadata = MetadataCatalog.get("tabletop_object_train")
 
-from topk_test_utils import Predictor_RGBD, test_dataset, test_sample
+from topk_test_utils import Predictor_RGBD, test_dataset, test_sample, test_sample_crop, test_dataset_crop
 
-
-
+cfg.device = "cuda:0"
 cfg.MODEL.WEIGHTS = weight_path
 predictor = Predictor_RGBD(cfg)
 #test_sample(cfg, ocid_dataset[4], predictor, visualization=True)
-# test_sample(cfg, dataset[3], predictor, visualization=True)
-test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
+#test_sample_crop(cfg, dataset[6], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
+#test_sample_crop(cfg, ocid_dataset[4], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
+#test_sample(cfg, dataset[4], predictor, visualization=True)
+#test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
 test_dataset(cfg, dataset, predictor, visualization=False, topk=True)
 
+#test_dataset_crop(cfg, dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9)
+
 # for i in range(40):
-#     test_sample(cfg, ocid_dataset[i], predictor, visualization=True)
+#     test_sample(cfg, ocid_dataset[i], predictor, visualization=True, topk=False, confident_score=0.8)
 # OCID dataset
 #test_dataset(cfg, ocid_dataset, predictor, visualization=False)
 #test_dataset(cfg, ocid_dataset, predictor, visualization=True, topk=False, confident_score=0.9)
+#test_dataset_crop(cfg, ocid_dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9)

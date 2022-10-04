@@ -366,6 +366,15 @@ class TableTopDataset(data.Dataset, datasets.imdb):
 
         label_blob = torch.from_numpy(foreground_labels).unsqueeze(0)
         record["label"] = label_blob
+
+        im_tensor = torch.from_numpy(im) / 255.0
+        im_tensor -= self._pixel_mean
+        image_blob = im_tensor.permute(2, 0, 1)
+        record['image_color'] = image_blob
+
+        if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
+            depth_blob = torch.from_numpy(xyz_img).permute(2, 0, 1)
+            record['depth'] = depth_blob
         # record["image"] = torch.permute(torch.from_numpy(im), (2, 0, 1))
 
         # if not objs:

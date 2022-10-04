@@ -41,6 +41,35 @@ def get_backbone():
     # network.eval()
     for param in network.parameters():
         param.requires_grad = False
+
+    if pretrained_crop:
+        network_data_crop = torch.load(pretrained_crop)
+        network_crop = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda()#cuda(device=cfg.device)
+        network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda() #cuda(device=cfg.device)
+        network_crop.eval()
+    else:
+        network_crop = None
+
+    # if cfg.TEST.VISUALIZE:
+    #     index_images = np.random.permutation(len(images_color))
+    # else:
+    #     index_images = range(len(images_color))
+
+    # for i in index_images:
+    #     if os.path.exists(images_color[i]):
+    #         print(images_color[i])
+    #         # read sample
+    #         sample = read_sample(images_color[i], images_depth[i], camera_params)
+    #
+    #         # run network
+    #         out_label, out_label_refined = test_sample(sample, network, network_crop)
+    #         # cv2.imshow("image", out_label_refined.squeeze().numpy())
+    #         # cv2.waitKey(0)
+    #         # # cv2.waitKey(100000)
+    #         # cv2.destroyAllWindows()
+    #         # print(out_label.shape)
+    #     else:
+    #         print('files not exist %s' % (images_color[i]))
     return network
 # save data
 def save_data(file_rgb, out_label_refined, roi, features_crop):
@@ -104,71 +133,81 @@ def read_sample(filename_color, filename_depth, camera_params):
     return sample
 
 #get_backbone()
+# if __name__ == "__main__":
+#     num_classes = 2
+#     pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
+#     pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
+#     network_name = "seg_resnet34_8s_embedding"
+#     if pretrained:
+#         network_data = torch.load(pretrained)
+#         print("=> using pre-trained network '{}'".format(pretrained))
+#     else:
+#         network_data = None
+#         print("no pretrained network specified")
+#         sys.exit()
 #
-# num_classes = 2
-# pretrained = "data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
-# pretrained_crop = "data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
-# network_name = "seg_resnet34_8s_embedding"
-# if pretrained:
-#     network_data = torch.load(pretrained)
-#     print("=> using pre-trained network '{}'".format(pretrained))
-# else:
-#     network_data = None
-#     print("no pretrained network specified")
-#     sys.exit()
+#     network = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data).cuda()
+#     # network = torch.nn.DataParallel(network, device_ids=[0]).cuda()
+#     cudnn.benchmark = True
+#     network.eval()
+#     for param in network.parameters():
+#         param.requires_grad = False
 #
-# network = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data).cuda()
-# # network = torch.nn.DataParallel(network, device_ids=[0]).cuda()
-# cudnn.benchmark = True
-# network.eval()
-# for param in network.parameters():
-#     param.requires_grad = False
+#     if pretrained_crop:
+#         network_data_crop = torch.load(pretrained_crop)
+#         network_crop = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda()
+#         network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda()
+#         network_crop.eval()
+#     else:
+#         network_crop = None
+#     #get images
+#     images_color = []
+#     filename = os.path.join("/home/xy/yxl/UnseenForMeanShift/data/demo", "*-color.png")
+#     files = glob.glob(filename)
+#     for i in range(len(files)):
+#         filename = files[i]
+#         images_color.append(filename)
+#     images_color.sort()
 #
-# #get images
-# images_color = []
-# filename = os.path.join("data/demo", "*-color.png")
-# files = glob.glob(filename)
-# for i in range(len(files)):
-#     filename = files[i]
-#     images_color.append(filename)
-# images_color.sort()
+#     images_depth = []
+#     filename = os.path.join("/home/xy/yxl/UnseenForMeanShift/data/demo", "*-depth.png")
+#     files = glob.glob(filename)
+#     for i in range(len(files)):
+#         filename = files[i]
+#         images_depth.append(filename)
+#     images_depth.sort()
 #
-# images_depth = []
-# filename = os.path.join("data/demo", "*-depth.png")
-# files = glob.glob(filename)
-# for i in range(len(files)):
-#     filename = files[i]
-#     images_depth.append(filename)
-# images_depth.sort()
+#     # check if intrinsics available
+#     filename = os.path.join("/home/xy/yxl/UnseenForMeanShift/data/demo", 'camera_params.json')
+#     if os.path.exists(filename):
+#         with open(filename) as f:
+#             camera_params = json.load(f)
+#     else:
+#         camera_params = None
 #
-# # check if intrinsics available
-# filename = os.path.join("data/demo", 'camera_params.json')
-# if os.path.exists(filename):
-#     with open(filename) as f:
-#         camera_params = json.load(f)
-# else:
-#     camera_params = None
+#     cfg.device = "cuda:0"
+#     index_images = range(len(images_color))
+#     for i in index_images:
+#         if os.path.exists(images_color[i]):
+#             print(images_color[i])
+#             # read sample
+#             sample = read_sample(images_color[i], images_depth[i], camera_params)
+#             # construct input
+#             image = sample['image_color'].cuda()
+#             if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
+#                 depth = sample['depth'].cuda()
+#             else:
+#                 depth = None
 #
-# index_images = range(len(images_color))
-# for i in index_images:
-#     if os.path.exists(images_color[i]):
-#         print(images_color[i])
-#         # read sample
-#         sample = read_sample(images_color[i], images_depth[i], camera_params)
-#         # construct input
-#         image = sample['image_color'].cuda()
-#         if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
-#             depth = sample['depth'].cuda()
-#         else:
-#             depth = None
+#             if 'label' in sample:
+#                 label = sample['label'].cuda()
+#             else:
+#                 label = None
 #
-#         if 'label' in sample:
-#             label = sample['label'].cuda()
-#         else:
-#             label = None
-#
-#         # get features
-#         features = network(image, label, depth).detach()
+#             # get features
+#             #features = network(image, label, depth).detach()
+#             out_label, out_label_refined = test_sample(sample, network, network_crop)
+#             print(out_label)
 # print(images_color)
 #features = network(image, label, depth).detach()
 

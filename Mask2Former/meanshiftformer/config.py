@@ -25,32 +25,6 @@ def add_meanshiftformer_config(cfg):
     cfg.SOLVER.OPTIMIZER = "ADAMW"
     cfg.SOLVER.BACKBONE_MULTIPLIER = 0.1
 
-    # mean shift model config
-    # cfg.MODEL.MEAN_SHIFT = CN()
-    #
-    # cfg.MODEL.MEAN_SHIFT.NUM_OBJECT_QUERIES = 100
-    # # Mean shift transformer config
-    # cfg.MODEL.MEAN_SHIFT.NHEADS = 1
-    # cfg.MODEL.MEAN_SHIFT.DROPOUT = 0.1
-    # cfg.MODEL.MEAN_SHIFT.DIM_FEEDFORWARD = 2048
-    # cfg.MODEL.MEAN_SHIFT.ENC_LAYERS = 0
-    # cfg.MODEL.MEAN_SHIFT.DEC_LAYERS = 6
-    # cfg.MODEL.MEAN_SHIFT.PRE_NORM = False
-    #
-    # cfg.MODEL.MEAN_SHIFT.HIDDEN_DIM = 256
-    #
-    # cfg.MODEL.MEAN_SHIFT.TRANSFORMER_IN_FEATURE = "res5"  # update later
-    # cfg.MODEL.MEAN_SHIFT.ENFORCE_INPUT_PROJ = False
-    # mean shift former inference config
-    # cfg.MODEL.MEAN_SHIFT.TEST = CN()
-    # cfg.MODEL.MEAN_SHIFT.TEST.SEMANTIC_ON = True
-    # cfg.MODEL.MEAN_SHIFT.TEST.INSTANCE_ON = False
-    # cfg.MODEL.MEAN_SHIFT.TEST.PANOPTIC_ON = False
-    # cfg.MODEL.MEAN_SHIFT.TEST.OBJECT_MASK_THRESHOLD = 0.0
-    # cfg.MODEL.MEAN_SHIFT.TEST.OVERLAP_THRESHOLD = 0.0
-    # cfg.MODEL.MEAN_SHIFT.TEST.SEM_SEG_POSTPROCESSING_BEFORE_INFERENCE = False
-
-    # mask_former model config
     cfg.MODEL.MASK_FORMER = CN()
 
     # loss

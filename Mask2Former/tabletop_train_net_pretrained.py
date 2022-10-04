@@ -288,7 +288,7 @@ def setup(args):
     add_deeplab_config(cfg)
     #add_maskformer2_config(cfg)
     add_meanshiftformer_config(cfg)
-    cfg_file = "configs/coco_ms/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
+    cfg_file = "configs/coco_ms/instance-segmentation/tabeltop_pretrained.yaml"
     #cfg_file = "configs/coco/instance-segmentation/swin/maskformer2_swin_base_384_bs16_50ep.yaml"
     cfg.merge_from_file(cfg_file)
     add_tabletop_config(cfg)
@@ -296,19 +296,19 @@ def setup(args):
     # cfg.merge_from_list(args.opts)
     # cfg.SOLVER.MAX_ITER = 4000
     # cfg.SOLVER.CHECKPOINT_PERIOD = 1000
-    cfg.MODEL.SEM_SEG_HEAD.NAME = "PretrainedMeanShiftMaskFormerHead"
-    cfg.MODEL.SEM_SEG_HEAD.PIXEL_DECODER_NAME = "SimpleBasePixelDecoder"
-    cfg.MODEL.SEM_SEG_HEAD.IN_FEATURES = ["res5", ]
-    cfg.MODEL.SEM_SEG_HEAD.CONVS_DIM = 64
-    cfg.MODEL.META_ARCHITECTURE = "PretrainedMeanShiftMaskFormer"
-    cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
-    cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME = "PretrainedMeanShiftTransformerDecoder"
-    cfg.OUTPUT_DIR = "./output_0929_64featuremap"
-    cfg.MODEL.SEM_SEG_HEAD.MASK_DIM = 64 # when we use the original last feature map instead of Mask features
+    # cfg.MODEL.SEM_SEG_HEAD.NAME = "PretrainedMeanShiftMaskFormerHead"
+    # cfg.MODEL.SEM_SEG_HEAD.PIXEL_DECODER_NAME = "SimpleBasePixelDecoder"
+    # cfg.MODEL.SEM_SEG_HEAD.IN_FEATURES = ["res5", ]
+    # cfg.MODEL.SEM_SEG_HEAD.CONVS_DIM = 64
+    # cfg.MODEL.META_ARCHITECTURE = "PretrainedMeanShiftMaskFormer"
+    # cfg.MODEL.MASK_FORMER.DEC_LAYERS = 5
+    # cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME = "PretrainedMeanShiftTransformerDecoder"
+    #cfg.OUTPUT_DIR = "./output_1003"
+    #cfg.MODEL.SEM_SEG_HEAD.MASK_DIM = 256 # when we directly use the original last feature map instead of Mask features
     # cfg.MODEL.WEIGHTS = "./ms_output_RGB_embedding_loss/model_0001999.pth"
-    cfg.MODEL.WEIGHTS = ""
-    cfg.SOLVER.MAX_ITER = 3000
-    #cfg.SOLVER.CHECKPOINT_PERIOD = 1000
+    #cfg.MODEL.WEIGHTS = ""
+    cfg.SOLVER.MAX_ITER = 2000
+    cfg.SOLVER.CHECKPOINT_PERIOD = 1000
     cfg.freeze()
     default_setup(cfg, args)
     # Setup logger for "mask_former" module

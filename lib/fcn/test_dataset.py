@@ -174,7 +174,7 @@ def match_label_crop(initial_masks, labels_crop, out_label_crop, rois, depth_cro
 
         # Set refined mask
         h_idx, w_idx = torch.nonzero(resized_mask).t()
-        refined_masks[0, y_min:y_max+1, x_min:x_max+1][h_idx, w_idx] = resized_mask[h_idx, w_idx].cpu()
+        refined_masks[0, y_min:y_max+1, x_min:x_max+1][h_idx, w_idx] = resized_mask[h_idx, w_idx]#.cpu()
 
     return refined_masks, labels_crop
 

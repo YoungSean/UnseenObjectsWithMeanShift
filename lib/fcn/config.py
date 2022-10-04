@@ -26,6 +26,7 @@ __C = edict()
 #   from fast_rcnn_config import cfg
 cfg = __C
 
+__C.device = 'cuda:0'
 __C.FLIP_X = False
 __C.INPUT = 'RGBD'
 __C.NETWORK = 'VGG16'

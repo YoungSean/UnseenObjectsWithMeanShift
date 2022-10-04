@@ -244,7 +244,7 @@ class SimpleBasePixelDecoder(nn.Module):
         )
         weight_init.c2_xavier_fill(self.mask_features)
 
-        self.maskformer_num_feature_levels = 3  # always use 3 scales
+        self.maskformer_num_feature_levels = 1 #3  # always use 3 scales
 
     @classmethod
     def from_config(cls, cfg, input_shape: Dict[str, ShapeSpec]):
@@ -276,8 +276,8 @@ class SimpleBasePixelDecoder(nn.Module):
             if num_cur_levels < self.maskformer_num_feature_levels:
                 multi_scale_features.append(y)
                 num_cur_levels += 1
-        #return self.mask_features(y), None, multi_scale_features
-        return y, None, multi_scale_features
+        return self.mask_features(y), None, multi_scale_features
+        #return y, None, multi_scale_features
 
     def forward(self, features, targets=None):
         logger = logging.getLogger(__name__)
