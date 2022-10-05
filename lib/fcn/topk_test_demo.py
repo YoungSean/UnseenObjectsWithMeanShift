@@ -10,7 +10,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Mask2Former'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'datasets'))
 #print(os.path.join(os.path.dirname(__file__), '..', '..'))
-
+import numpy as np
 from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.data import MetadataCatalog, DatasetCatalog, build_detection_train_loader, build_detection_test_loader
 from detectron2.evaluation import DatasetEvaluator, inference_on_dataset, DatasetEvaluators
@@ -62,11 +62,11 @@ add_tabletop_config(cfg)
 cfg.SOLVER.IMS_PER_BATCH = 1 #
 # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/output_RGB/model_0004999.pth"
 cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
-# cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME = "PretrainedMeanShiftTransformerDecoder"
+
 cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD'
 # arguments frequently tuned
 cfg.TEST.DETECTIONS_PER_IMAGE = 20
-#cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = 2
+
 
 # cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD' #"RGBD_ADD" #'DEPTH'
 weight_path = "../../Mask2Former/output_0923_kappa30/model_0139999.pth"
@@ -96,17 +96,26 @@ from topk_test_utils import Predictor_RGBD, test_dataset, test_sample, test_samp
 cfg.device = "cuda:0"
 cfg.MODEL.WEIGHTS = weight_path
 predictor = Predictor_RGBD(cfg)
-#test_sample(cfg, ocid_dataset[4], predictor, visualization=True)
+#test_sample(cfg, ocid_dataset[41], predictor, visualization=True)
 #test_sample_crop(cfg, dataset[6], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
-#test_sample_crop(cfg, ocid_dataset[4], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
+#test_sample_crop(cfg, ocid_dataset[41], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
 #test_sample(cfg, dataset[4], predictor, visualization=True)
 #test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
-test_dataset(cfg, dataset, predictor, visualization=False, topk=True)
+#test_dataset(cfg, dataset, predictor, visualization=False, topk=True)
 
 #test_dataset_crop(cfg, dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9)
 
-# for i in range(40):
-#     test_sample(cfg, ocid_dataset[i], predictor, visualization=True, topk=False, confident_score=0.8)
+met_all = []
+met_refined_all= []
+for i in range(40, 60):
+    metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, network_crop, visualization=False, topk=False, confident_score=0.8)
+    met_all.append(metrics["Boundary F-measure"])
+    met_refined_all.append(metrics_refined["Boundary F-measure"])
+
+print(np.mean(np.array(met_all)))
+print(np.mean(np.array(met_refined_all)))
+#     test_sample(cfg, ocid_dataset[i], predictor, visualization=True, topk=False,
+#                      confident_score=0.8)
 # OCID dataset
 #test_dataset(cfg, ocid_dataset, predictor, visualization=False)
 #test_dataset(cfg, ocid_dataset, predictor, visualization=True, topk=False, confident_score=0.9)

@@ -221,7 +221,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
     def device(self):
         return self.pixel_mean.device
 
-    def forward(self, batched_inputs):
+    def forward(self, batched_inputs,features=None):
         """
         Args:
             batched_inputs: a list, batched outputs of :class:`DatasetMapper`.
@@ -247,21 +247,28 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
                     segments_info (list[dict]): Describe each segment in `panoptic_seg`.
                         Each dict contains keys "id", "category_id", "isthing".
         """
-        images = [x["image"].to(self.device) for x in batched_inputs]
+        if len(batched_inputs[0]["image"].shape)==4:
+            images = batched_inputs[0]["image"].to(self.device)
+        else:
+            images = [x["image"].to(self.device) for x in batched_inputs]
         #pixel_mean = torch.tensor(np.array([[[102.9801, 115.9465, 122.7717]]]) / 255.0).float()
         images = [(x - self.pixel_mean) / self.pixel_std for x in images]
         #images = [(x - self.pixel_mean / 255.0) for x in images]
         #images = torch.stack(images, dim=0)
         images = ImageList.from_tensors(images, self.size_divisibility)
 
-        images_depth = [x["depth"].to(self.device) for x in batched_inputs]
-        #images_depth = torch.stack(images_depth, dim=0)
-        images_depth = ImageList.from_tensors(images_depth, self.size_divisibility)
-        #features = self.backbone(images.tensor)
-        if self.use_embedding_loss:
-            features = self.pretrained_backbone(images.tensor, None, images_depth.tensor)
+        if len(batched_inputs[0]["depth"].shape)==4:
+            images_depth = batched_inputs[0]["depth"].to(self.device)
         else:
-            features = self.pretrained_backbone(images.tensor, None, images_depth.tensor).detach()
+            images_depth = [x["depth"].to(self.device) for x in batched_inputs]
+        #images_depth = torch.stack(images_depth, dim=0)
+            images_depth = ImageList.from_tensors(images_depth, self.size_divisibility)
+        #features = self.backbone(images.tensor)
+        if features is None:
+            if self.use_embedding_loss:
+                features = self.pretrained_backbone(images.tensor, None, images_depth.tensor)
+            else:
+                features = self.pretrained_backbone(images.tensor, None, images_depth.tensor).detach()
         norm_features = F.normalize(features, p=2, dim=1)
         new_features = {}
         new_features['res5'] = norm_features

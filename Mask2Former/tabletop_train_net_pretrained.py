@@ -294,21 +294,10 @@ def setup(args):
     add_tabletop_config(cfg)
     # cfg.merge_from_file(args.config_file)
     # cfg.merge_from_list(args.opts)
-    # cfg.SOLVER.MAX_ITER = 4000
-    # cfg.SOLVER.CHECKPOINT_PERIOD = 1000
-    # cfg.MODEL.SEM_SEG_HEAD.NAME = "PretrainedMeanShiftMaskFormerHead"
-    # cfg.MODEL.SEM_SEG_HEAD.PIXEL_DECODER_NAME = "SimpleBasePixelDecoder"
-    # cfg.MODEL.SEM_SEG_HEAD.IN_FEATURES = ["res5", ]
-    # cfg.MODEL.SEM_SEG_HEAD.CONVS_DIM = 64
-    # cfg.MODEL.META_ARCHITECTURE = "PretrainedMeanShiftMaskFormer"
-    # cfg.MODEL.MASK_FORMER.DEC_LAYERS = 5
-    # cfg.MODEL.MASK_FORMER.TRANSFORMER_DECODER_NAME = "PretrainedMeanShiftTransformerDecoder"
     #cfg.OUTPUT_DIR = "./output_1003"
-    #cfg.MODEL.SEM_SEG_HEAD.MASK_DIM = 256 # when we directly use the original last feature map instead of Mask features
-    # cfg.MODEL.WEIGHTS = "./ms_output_RGB_embedding_loss/model_0001999.pth"
     #cfg.MODEL.WEIGHTS = ""
-    cfg.SOLVER.MAX_ITER = 2000
-    cfg.SOLVER.CHECKPOINT_PERIOD = 1000
+    # cfg.SOLVER.MAX_ITER = 2000
+    # cfg.SOLVER.CHECKPOINT_PERIOD = 1000
     cfg.freeze()
     default_setup(cfg, args)
     # Setup logger for "mask_former" module

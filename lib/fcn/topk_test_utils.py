@@ -47,6 +47,9 @@ from torch.utils.data import DataLoader
 # ignore some warnings
 import warnings
 warnings.simplefilter("ignore", UserWarning)
+import numpy as np
+import cv2 as cv
+from matplotlib import pyplot as plt
 
 # build model
 # cfg = get_cfg()
@@ -154,8 +157,45 @@ class Predictor_RGBD(DefaultPredictor):
             predictions = self.model([inputs])[0]
             return predictions
 
+class Predictor_RGBD_CROP(DefaultPredictor):
+
+    def __call__(self,image, depth,features):
+        """
+        Args:
+            sample: a dict of a data sample
+            # ignore: original_image (np.ndarray): an image of shape (H, W, C) (in BGR order).
+
+        Returns:
+            predictions (dict):
+                the output of the model for one image only.
+                See :doc:`/tutorials/models` for details about the format.
+        """
+        with torch.no_grad():  # https://github.com/sphinx-doc/sphinx/issues/4258
+            # Apply pre-processing to image.
+            height, width = 224, 224
+            # image = sample["image"]
+            # original_image = cv2.imread(sample["file_name"])
+            # if self.input_format == "RGB":
+            #     # whether the model expects BGR inputs or RGB
+            #     original_image = original_image[:, :, ::-1]
+            # transforms = self.aug.get_transform(original_image)
+            # image = transforms.apply_image(original_image)
+            # image = torch.as_tensor(image.astype("float32").transpose(2, 0, 1))
+            #image = torch.as_tensor(original_image.astype("float32").transpose(2, 0, 1))
+            inputs = {"image": image, "height": height, "width": width}
+
+            if self.cfg.INPUT.INPUT_IMAGE == "DEPTH" or "RGBD" in self.cfg.INPUT.INPUT_IMAGE:
+                # depth_image = sample["raw_depth"]
+                # depth_image = transforms.apply_image(depth_image)
+                # depth_image = torch.as_tensor(depth_image.astype("float32").transpose(2, 0, 1))
+                # depth = depth_image
+                inputs["depth"] = depth
+
+            predictions = self.model([inputs], features)[0]
+            return predictions
 def test_sample(cfg, sample, predictor, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4):
     im = cv2.imread(sample["file_name"])
+    print(sample["file_name"])
     if "label" in sample.keys():
         gt = sample["label"].squeeze().numpy()
     else:
@@ -170,8 +210,10 @@ def test_sample(cfg, sample, predictor, visualization = False, topk=True, confid
                                                   num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
                                                   low_threshold=low_threshold)
     binary_mask = combine_masks(confident_instances)
+    print(binary_mask)
+    #np.save("pred51", binary_mask)
     metrics = multilabel_metrics(binary_mask, gt)
-    #print(f"metrics: ", metrics)
+    print(f"metrics: ", metrics)
     ## Visualize the result
     if visualization:
         v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
@@ -182,9 +224,55 @@ def test_sample(cfg, sample, predictor, visualization = False, topk=True, confid
         cv2.waitKey(0)
         # cv2.waitKey(100000)
         cv2.destroyAllWindows()
+    # markers = refine_with_watershed(im, binary_mask)
+    # metrics2 = multilabel_metrics(markers, gt)
+    # print(f"metrics2: ", metrics2g)
     return metrics
 
+def refine_with_watershed(img, prediction):
+
+    thresh = prediction.astype(int)
+    # noise removal
+    kernel = np.ones((3, 3), np.uint8)
+    # opening = cv.morphologyEx(thresh, cv.MORPH_OPEN, kernel, iterations=2)
+    opening = thresh
+    opening = opening.astype('uint8')
+    sure_bg = cv.dilate(opening, kernel, iterations=3)
+    # Finding sure foreground area
+    dist_transform = cv.distanceTransform(opening, cv.DIST_L2, 5)
+    ret, sure_fg = cv.threshold(dist_transform, 0.2 * dist_transform.max(), 255, 0)
+    # Finding unknown region
+    sure_fg = np.uint8(sure_fg)
+    sure_bg = np.uint8(sure_bg)
+    unknown = cv.subtract(sure_bg, sure_fg)
+    # Marker labelling
+    ret, markers = cv.connectedComponents(sure_fg)
+    # Add one to all labels so that sure background is not 0, but 1
+    markers = markers + 1
+    # Now, mark the region of unknown with zero
+    markers[unknown == 255] = 0
+
+    markers = cv.watershed(img, markers)
+    print(np.unique(markers))
+    img[markers == -1] = [0, 0, 255]
+    print("marker type: ", markers.dtype)
+    markers = markers.astype(np.uint8)
+    markers[markers==1] = 0
+    markers[markers == 2] = 255
+    markers[markers == 3] = 200
+    markers[markers == 4] = 150
+    markers[markers == 5] = 100
+    cv.imshow("image marker", markers)
+    # # print(np.unique(markers))
+    cv2.waitKey(0)
+    # #cv.imshow("image ", img)
+    # #cv2.waitKey(0)
+    # # cv2.waitKey(100000)
+    cv2.destroyAllWindows()
+    return markers
+
 def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4):
+    #cluster_crop = Predictor_RGBD_CROP(cfg)
     image = sample['image_color'].cuda()
     im = cv2.imread(sample["file_name"])
     if "label" in sample.keys():
@@ -206,6 +294,8 @@ def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False
                                                   num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
                                                   low_threshold=low_threshold)
     binary_mask = combine_masks(confident_instances)
+    metrics = multilabel_metrics(binary_mask, gt)
+    print("first:", metrics)
 
     if visualization:
         v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
@@ -218,13 +308,14 @@ def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False
         cv2.destroyAllWindows()
 
     out_label = torch.as_tensor(binary_mask).unsqueeze(dim=0).cuda()
+    #print("depth shape: ", depth.shape)
     if len(depth.shape) == 3:
         depth = torch.unsqueeze(depth, dim=0)
     if len(image.shape) == 3:
         image = torch.unsqueeze(image, dim=0)
     if depth is not None:
         # filter labels on zero depth
-        out_label = filter_labels_depth(out_label, depth, 0.5)
+        out_label = filter_labels_depth(out_label, depth, 0.8)
 
     # zoom in refinement
     out_label_refined = None
@@ -232,17 +323,37 @@ def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False
         rgb_crop, out_label_crop, rois, depth_crop = crop_rois(image, out_label.clone(), depth)
         if rgb_crop.shape[0] > 0:
             features_crop = network_crop(rgb_crop, out_label_crop, depth_crop)
-            labels_crop, selected_pixels_crop = clustering_features(features_crop)
+            labels_crop, selected_pixels_crop = clustering_features(features_crop, num_seeds=10)
+            # result_crop = cluster_crop(rgb_crop, depth_crop, features_crop)
+            # confident_instances_crop = get_confident_instances(result_crop, topk=topk, score=confident_score,
+            #                                               num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
+            #                                               low_threshold=low_threshold)
+            # binary_mask_crop = combine_masks(confident_instances_crop)
+            # labels_crop = torch.as_tensor(binary_mask_crop).unsqueeze(dim=0).cuda()
             out_label_refined, labels_crop = match_label_crop(out_label, labels_crop.cuda(), out_label_crop, rois, depth_crop)
-            out_label_refined = out_label_refined.squeeze(dim=0).cpu().numpy()
+
     #metrics2 = multilabel_metrics(out_label_refined, gt)
+
+    if False:
+        bbox = None
+        _vis_minibatch_segmentation_final(image, depth, label, out_label, out_label_refined, None,
+            selected_pixels=None, bbox=bbox)
+
+    out_label_refined = out_label_refined.squeeze(dim=0).cpu().numpy()
     prediction = out_label.squeeze().detach().cpu().numpy()
     if out_label_refined is not None:
         prediction_refined = out_label_refined
     else:
         prediction_refined = prediction.copy()
     metrics_refined = multilabel_metrics(prediction_refined, gt)
-    return metrics_refined
+    print("refined: ", metrics_refined)
+    print("========")
+    # prediction_refined = refine_with_watershed(im, prediction_refined)
+    # metrics_refined = multilabel_metrics(prediction_refined, gt)
+    # print("refined with watershed: ", metrics_refined)
+    # print("========")
+
+    return metrics, metrics_refined
 
 def test_dataset(cfg,dataset, predictor, visualization=False, topk=True, confident_score=0.9, low_threshold=0.4):
     metrics_all = []
