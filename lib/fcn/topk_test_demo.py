@@ -33,7 +33,7 @@ import warnings
 import torch
 from config import cfg
 warnings.simplefilter("ignore", UserWarning)
-from topk_test_utils import Predictor_RGBD, test_dataset, test_sample, test_sample_crop, test_dataset_crop
+from topk_test_utils import Predictor_RGBD, test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD
 # get network crop
 cfg.device = "cuda:0"
 num_classes = 2
@@ -68,10 +68,32 @@ def get_predictor(input_image="RGBD_ADD"):
     weight_path = "../../Mask2Former/output_0923_kappa30/model_0139999.pth"
     #cfg.device = "cuda:0"
     cfg.MODEL.WEIGHTS = weight_path
-    predictor = Predictor_RGBD(cfg)
+    predictor = Network_RGBD(cfg)
+    return predictor, cfg
+
+def get_predictor_crop(input_image="RGBD_ADD"):
+# build model
+    cfg = get_cfg()
+    add_deeplab_config(cfg)
+    add_meanshiftformer_config(cfg)
+    #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
+    cfg_file = "../../Mask2Former/configs/crop_tabletop_pretrained.yaml"
+    cfg.merge_from_file(cfg_file)
+    add_tabletop_config(cfg)
+    cfg.SOLVER.IMS_PER_BATCH = 1 #
+    # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/output_RGB/model_0004999.pth"
+    #cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
+    cfg.INPUT.INPUT_IMAGE = input_image
+    # arguments frequently tuned
+    cfg.TEST.DETECTIONS_PER_IMAGE = 20
+    weight_path = "../../Mask2Former/output_1007_crop/model_final.pth"
+    #cfg.device = "cuda:0"
+    cfg.MODEL.WEIGHTS = weight_path
+    predictor = Network_RGBD(cfg)
     return predictor, cfg
 
 predictor, cfg = get_predictor()
+predictor_crop, cfg_crop = get_predictor_crop()
 
 # cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD' #"RGBD_ADD" #'DEPTH'
 
@@ -102,9 +124,10 @@ metadata = MetadataCatalog.get("tabletop_object_train")
 
 
 
-test_sample(cfg, ocid_dataset[41], predictor, visualization=True)
+#test_sample(cfg, ocid_dataset[41], predictor, visualization=True)
 #test_sample_crop(cfg, dataset[6], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
 #test_sample_crop(cfg, ocid_dataset[41], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
+test_sample_crop(cfg, ocid_dataset[41], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.9)
 #test_sample(cfg, dataset[4], predictor, visualization=True)
 #test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
 #test_dataset(cfg, dataset, predictor, visualization=False, topk=True)

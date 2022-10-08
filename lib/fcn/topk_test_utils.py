@@ -157,9 +157,9 @@ class Predictor_RGBD(DefaultPredictor):
             predictions = self.model([inputs])[0]
             return predictions
 
-class Predictor_RGBD_CROP(DefaultPredictor):
+class Network_RGBD(DefaultPredictor):
 
-    def __call__(self,image, depth,features):
+    def __call__(self, sample):
         """
         Args:
             sample: a dict of a data sample
@@ -172,26 +172,7 @@ class Predictor_RGBD_CROP(DefaultPredictor):
         """
         with torch.no_grad():  # https://github.com/sphinx-doc/sphinx/issues/4258
             # Apply pre-processing to image.
-            height, width = 224, 224
-            # image = sample["image"]
-            # original_image = cv2.imread(sample["file_name"])
-            # if self.input_format == "RGB":
-            #     # whether the model expects BGR inputs or RGB
-            #     original_image = original_image[:, :, ::-1]
-            # transforms = self.aug.get_transform(original_image)
-            # image = transforms.apply_image(original_image)
-            # image = torch.as_tensor(image.astype("float32").transpose(2, 0, 1))
-            #image = torch.as_tensor(original_image.astype("float32").transpose(2, 0, 1))
-            inputs = {"image": image, "height": height, "width": width}
-
-            if self.cfg.INPUT.INPUT_IMAGE == "DEPTH" or "RGBD" in self.cfg.INPUT.INPUT_IMAGE:
-                # depth_image = sample["raw_depth"]
-                # depth_image = transforms.apply_image(depth_image)
-                # depth_image = torch.as_tensor(depth_image.astype("float32").transpose(2, 0, 1))
-                # depth = depth_image
-                inputs["depth"] = depth
-
-            predictions = self.model([inputs], features)[0]
+            predictions = self.model([sample])[0]
             return predictions
 def test_sample(cfg, sample, predictor, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4):
     im = cv2.imread(sample["file_name"])
@@ -271,10 +252,31 @@ def refine_with_watershed(img, prediction):
     cv2.destroyAllWindows()
     return markers
 
-def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4, num_of_ms_seed=10):
+def get_result_from_network(cfg, image, depth, label, predictor, topk=True, confident_score=0.9, low_threshold=0.4):
+    height = image.shape[-2]  # image: 3XHXW, tensor
+    width = image.shape[-1]
+    image = torch.squeeze(image, dim=0)
+    depth = torch.squeeze(depth, dim=0)
+    sample = {"image": image, "height": height, "width": width, "depth": depth}
+    outputs = predictor(sample)
+    confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
+                                                  num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
+                                                  low_threshold=low_threshold)
+    binary_mask = combine_masks(confident_instances)
+    return binary_mask
+
+def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4, num_of_ms_seed=10):
     #cluster_crop = Predictor_RGBD_CROP(cfg)
-    image = sample['image_color'].cuda()
-    im = cv2.imread(sample["file_name"])
+    # First network: the image needs the original one.
+    image = sample['image_color'].cuda() # for future crop
+    im = cv2.imread(sample["file_name"])  # this is for visualization
+    im_input = im
+    if cfg.INPUT.FORMAT == "RGB":
+        # whether the model expects BGR inputs or RGB
+        im_input = im_input[:, :, ::-1]
+    sample["image"] = torch.as_tensor(im_input.astype("float32").transpose(2, 0, 1))
+    sample["height"] = image.shape[-2] # image: 3XHXW, tensor
+    sample["width"] = image.shape[-1]
     if "label" in sample.keys():
         gt = sample["label"].squeeze().numpy()
     else:
@@ -297,15 +299,15 @@ def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False
     metrics = multilabel_metrics(binary_mask, gt)
     print("first:", metrics)
 
-    # if visualization:
-    #     v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
-    #     out = v.draw_instance_predictions(confident_instances.to("cpu"))
-    #     visual_result = out.get_image()[:, :, ::-1]
-    #     # cv2.imwrite(sample["file_name"][-6:-3]+"pred.png", visual_result)
-    #     cv2.imshow("image", visual_result)
-    #     cv2.waitKey(0)
-    #     # cv2.waitKey(100000)
-    #     cv2.destroyAllWindows()
+    if visualization:
+        v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
+        out = v.draw_instance_predictions(confident_instances.to("cpu"))
+        visual_result = out.get_image()[:, :, ::-1]
+        # cv2.imwrite(sample["file_name"][-6:-3]+"pred.png", visual_result)
+        cv2.imshow("image", visual_result)
+        cv2.waitKey(0)
+        # cv2.waitKey(100000)
+        cv2.destroyAllWindows()
 
     out_label = torch.as_tensor(binary_mask).unsqueeze(dim=0).cuda()
     #print("depth shape: ", depth.shape)
@@ -319,17 +321,20 @@ def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False
 
     # zoom in refinement
     out_label_refined = None
-    if network_crop is not None:
+    if predictor_crop is not None:
         rgb_crop, out_label_crop, rois, depth_crop = crop_rois(image, out_label.clone(), depth)
         if rgb_crop.shape[0] > 0:
-            features_crop = network_crop(rgb_crop, out_label_crop, depth_crop)
-            labels_crop, selected_pixels_crop = clustering_features(features_crop, num_seeds=num_of_ms_seed)
+            # features_crop = predictor_crop(rgb_crop, out_label_crop, depth_crop)
+            # labels_crop, selected_pixels_crop = clustering_features(features_crop, num_seeds=num_of_ms_seed)
             # result_crop = cluster_crop(rgb_crop, depth_crop, features_crop)
             # confident_instances_crop = get_confident_instances(result_crop, topk=topk, score=confident_score,
             #                                               num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
             #                                               low_threshold=low_threshold)
             # binary_mask_crop = combine_masks(confident_instances_crop)
             # labels_crop = torch.as_tensor(binary_mask_crop).unsqueeze(dim=0).cuda()
+            binary_mask_crop = get_result_from_network(cfg, rgb_crop, depth_crop, out_label_crop, predictor_crop,
+                                                       topk=topk, confident_score=confident_score, low_threshold=low_threshold)
+            labels_crop = torch.as_tensor(binary_mask_crop).unsqueeze(dim=0).cuda()
             out_label_refined, labels_crop = match_label_crop(out_label, labels_crop.cuda(), out_label_crop, rois, depth_crop)
 
     #metrics2 = multilabel_metrics(out_label_refined, gt)
