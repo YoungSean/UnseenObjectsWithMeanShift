@@ -257,6 +257,7 @@ def get_result_from_network(cfg, image, depth, label, predictor, topk=True, conf
     width = image.shape[-1]
     image = torch.squeeze(image, dim=0)
     depth = torch.squeeze(depth, dim=0)
+
     sample = {"image": image, "height": height, "width": width, "depth": depth}
     outputs = predictor(sample)
     confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
@@ -324,6 +325,7 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
     if predictor_crop is not None:
         rgb_crop, out_label_crop, rois, depth_crop = crop_rois(image, out_label.clone(), depth)
         if rgb_crop.shape[0] > 0:
+            labels_crop = torch.zeros((rgb_crop.shape[0], rgb_crop.shape[-2], rgb_crop.shape[-1]))#.cuda()
             # features_crop = predictor_crop(rgb_crop, out_label_crop, depth_crop)
             # labels_crop, selected_pixels_crop = clustering_features(features_crop, num_seeds=num_of_ms_seed)
             # result_crop = cluster_crop(rgb_crop, depth_crop, features_crop)
@@ -332,12 +334,13 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
             #                                               low_threshold=low_threshold)
             # binary_mask_crop = combine_masks(confident_instances_crop)
             # labels_crop = torch.as_tensor(binary_mask_crop).unsqueeze(dim=0).cuda()
-            binary_mask_crop = get_result_from_network(cfg, rgb_crop, depth_crop, out_label_crop, predictor_crop,
+            for i in range(rgb_crop.shape[0]):
+                binary_mask_crop = get_result_from_network(cfg, rgb_crop[i], depth_crop[i], out_label_crop[i], predictor_crop,
                                                        topk=topk, confident_score=confident_score, low_threshold=low_threshold)
-            labels_crop = torch.as_tensor(binary_mask_crop).unsqueeze(dim=0).cuda()
+                labels_crop[i] = torch.from_numpy(binary_mask_crop)
+            #torch.as_tensor(binary_mask_crop).unsqueeze(dim=0).cuda()
+            #print("shape of labels_crop", labels_crop.shape)
             out_label_refined, labels_crop = match_label_crop(out_label, labels_crop.cuda(), out_label_crop, rois, depth_crop)
-
-    #metrics2 = multilabel_metrics(out_label_refined, gt)
 
     if visualization:
         bbox = None

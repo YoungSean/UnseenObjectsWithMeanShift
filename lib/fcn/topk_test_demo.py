@@ -1,7 +1,7 @@
 import sys
 import os
 
-import networks
+# import networks
 
 #print(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(__file__))
@@ -35,19 +35,19 @@ from config import cfg
 warnings.simplefilter("ignore", UserWarning)
 from topk_test_utils import Predictor_RGBD, test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD
 # get network crop
-cfg.device = "cuda:0"
-num_classes = 2
-pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
-pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
-network_name = "seg_resnet34_8s_embedding"
-
-if pretrained_crop:
-    network_data_crop = torch.load(pretrained_crop)
-    network_crop = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda()
-    network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda()
-    network_crop.eval()
-else:
-    network_crop = None
+# cfg.device = "cuda:0"
+# num_classes = 2
+# pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
+# pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
+# network_name = "seg_resnet34_8s_embedding"
+#
+# if pretrained_crop:
+#     network_data_crop = torch.load(pretrained_crop)
+#     network_crop = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda()
+#     network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda()
+#     network_crop.eval()
+# else:
+#     network_crop = None
 
 
 def get_predictor(input_image="RGBD_ADD"):
@@ -127,22 +127,22 @@ metadata = MetadataCatalog.get("tabletop_object_train")
 #test_sample(cfg, ocid_dataset[41], predictor, visualization=True)
 #test_sample_crop(cfg, dataset[6], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
 #test_sample_crop(cfg, ocid_dataset[41], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
-test_sample_crop(cfg, ocid_dataset[41], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.9)
+test_sample_crop(cfg, ocid_dataset[41], predictor, predictor_crop, visualization=False, topk=False, confident_score=0.9)
 #test_sample(cfg, dataset[4], predictor, visualization=True)
 #test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
 #test_dataset(cfg, dataset, predictor, visualization=False, topk=True)
 
 #test_dataset_crop(cfg, dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9, num_of_ms_seed=5)
 
-# met_all = []
-# met_refined_all= []
-# for i in range(19, 20):
-#     metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, network_crop, visualization=True, topk=False, confident_score=0.9, num_of_ms_seed=16)
-#     met_all.append(metrics["Boundary F-measure"])
-#     met_refined_all.append(metrics_refined["Boundary F-measure"])
+met_all = []
+met_refined_all= []
+for i in range(19, 40):
+    metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, predictor_crop, visualization=False, topk=False, confident_score=0.9, num_of_ms_seed=16)
+    met_all.append(metrics["Boundary F-measure"])
+    met_refined_all.append(metrics_refined["Boundary F-measure"])
 #
-# print("Boundary F-measure", np.mean(np.array(met_all)))
-# print("Refined Boundary F-measure", np.mean(np.array(met_refined_all)))
+print("Boundary F-measure", np.mean(np.array(met_all)))
+print("Refined Boundary F-measure", np.mean(np.array(met_refined_all)))
 #     test_sample(cfg, ocid_dataset[i], predictor, visualization=True, topk=True,
                      # confident_score=0.8)
 # OCID dataset
