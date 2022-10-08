@@ -271,7 +271,7 @@ def refine_with_watershed(img, prediction):
     cv2.destroyAllWindows()
     return markers
 
-def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4):
+def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4, num_of_ms_seed=10):
     #cluster_crop = Predictor_RGBD_CROP(cfg)
     image = sample['image_color'].cuda()
     im = cv2.imread(sample["file_name"])
@@ -297,15 +297,15 @@ def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False
     metrics = multilabel_metrics(binary_mask, gt)
     print("first:", metrics)
 
-    if visualization:
-        v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
-        out = v.draw_instance_predictions(confident_instances.to("cpu"))
-        visual_result = out.get_image()[:, :, ::-1]
-        # cv2.imwrite(sample["file_name"][-6:-3]+"pred.png", visual_result)
-        cv2.imshow("image", visual_result)
-        cv2.waitKey(0)
-        # cv2.waitKey(100000)
-        cv2.destroyAllWindows()
+    # if visualization:
+    #     v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
+    #     out = v.draw_instance_predictions(confident_instances.to("cpu"))
+    #     visual_result = out.get_image()[:, :, ::-1]
+    #     # cv2.imwrite(sample["file_name"][-6:-3]+"pred.png", visual_result)
+    #     cv2.imshow("image", visual_result)
+    #     cv2.waitKey(0)
+    #     # cv2.waitKey(100000)
+    #     cv2.destroyAllWindows()
 
     out_label = torch.as_tensor(binary_mask).unsqueeze(dim=0).cuda()
     #print("depth shape: ", depth.shape)
@@ -323,7 +323,7 @@ def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False
         rgb_crop, out_label_crop, rois, depth_crop = crop_rois(image, out_label.clone(), depth)
         if rgb_crop.shape[0] > 0:
             features_crop = network_crop(rgb_crop, out_label_crop, depth_crop)
-            labels_crop, selected_pixels_crop = clustering_features(features_crop, num_seeds=10)
+            labels_crop, selected_pixels_crop = clustering_features(features_crop, num_seeds=num_of_ms_seed)
             # result_crop = cluster_crop(rgb_crop, depth_crop, features_crop)
             # confident_instances_crop = get_confident_instances(result_crop, topk=topk, score=confident_score,
             #                                               num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
@@ -334,12 +334,13 @@ def test_sample_crop(cfg, sample, predictor, network_crop, visualization = False
 
     #metrics2 = multilabel_metrics(out_label_refined, gt)
 
-    if False:
+    if visualization:
         bbox = None
         _vis_minibatch_segmentation_final(image, depth, label, out_label, out_label_refined, None,
             selected_pixels=None, bbox=bbox)
 
-    out_label_refined = out_label_refined.squeeze(dim=0).cpu().numpy()
+    if out_label_refined is not None:
+        out_label_refined = out_label_refined.squeeze(dim=0).cpu().numpy()
     prediction = out_label.squeeze().detach().cpu().numpy()
     if out_label_refined is not None:
         prediction_refined = out_label_refined
@@ -396,12 +397,14 @@ def test_dataset(cfg,dataset, predictor, visualization=False, topk=True, confide
     print(result)
     print('====================END=================================')
 
-def test_dataset_crop(cfg,dataset, predictor, network_crop, visualization=False, topk=True, confident_score=0.9, low_threshold=0.4):
+def test_dataset_crop(cfg,dataset, predictor, network_crop, visualization=False, topk=True, confident_score=0.9, low_threshold=0.4, num_of_ms_seed=10):
     metrics_all = []
+    metrics_all_refined = []
     for i in trange(len(dataset)):
-        metrics = test_sample_crop(cfg, dataset[i], predictor, network_crop, visualization=visualization,
-                              topk=topk, confident_score=confident_score, low_threshold=low_threshold)
+        metrics, metrics_refined = test_sample_crop(cfg, dataset[i], predictor, network_crop, visualization=visualization,
+                              topk=topk, confident_score=confident_score, low_threshold=low_threshold, num_of_ms_seed=num_of_ms_seed)
         metrics_all.append(metrics)
+        metrics_all_refined.append(metrics_refined)
     # for i in tqdm(dataset):
     #     metrics = test_sample(i, predictor, visualization=visualization)
     #     metrics_all.append(metrics)
@@ -435,7 +438,18 @@ def test_dataset_crop(cfg,dataset, predictor, network_crop, visualization=False,
 
     print('========================================================')
     print(result)
-    print('====================END=================================')
+    print('====================Refined=============================')
+
+    result_refined = {}
+    for metrics in metrics_all_refined:
+        for k in metrics.keys():
+            result_refined[k] = result_refined.get(k, 0) + metrics[k]
+
+    for k in sorted(result_refined.keys()):
+        result_refined[k] /= num
+        print('%s: %f' % (k, result_refined[k]))
+    print(result_refined)
+    print('========================================================')
 def test_dataset_with_weight(weight_path, cfg, dataset,topk=True, confident_score=0.9):
     cfg.MODEL.WEIGHTS = weight_path
     predictor = Predictor_RGBD(cfg)

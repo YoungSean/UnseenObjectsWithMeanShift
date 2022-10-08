@@ -180,7 +180,7 @@ class TableTopDataset(data.Dataset, datasets.imdb):
             xyz_img = augmentation.add_noise_to_xyz(xyz_img, depth_img, self.params)
         return xyz_img
 
-    def process_label(self, labels):
+    def process_label_to_annos(self, labels):
         """ Process labels
                 - Map the labels to [H x W x num_instances] numpy array
         """
@@ -215,6 +215,22 @@ class TableTopDataset(data.Dataset, datasets.imdb):
 
         return boxes, binary_masks, labels
 
+    def process_label(self, foreground_labels):
+        """ Process foreground_labels
+                - Map the foreground_labels to {0, 1, ..., K-1}
+
+            @param foreground_labels: a [H x W] numpy array of labels
+
+            @return: foreground_labels
+        """
+        # Find the unique (nonnegative) foreground_labels, map them to {0, ..., K-1}
+        unique_nonnegative_indices = np.unique(foreground_labels)
+        mapped_labels = foreground_labels.copy()
+        for k in range(unique_nonnegative_indices.shape[0]):
+            mapped_labels[foreground_labels == unique_nonnegative_indices[k]] = k
+        foreground_labels = mapped_labels
+        return foreground_labels
+
     def pad_crop_resize(self, img, label, depth):
         """ Crop the image around the label mask, then resize to 224x224
         """
@@ -231,6 +247,10 @@ class TableTopDataset(data.Dataset, datasets.imdb):
             foreground = (label == idx).astype(np.float32)
 
             # get tight box around label/morphed label
+            # cv2.imshow("image", img)
+            # cv2.waitKey(0)
+            # cv2.imshow("foreground", foreground*100)
+            # cv2.waitKey(0)
             x_min, y_min, x_max, y_max = util_.mask_to_tight_box(foreground)
             cx = (x_min + x_max) / 2
             cy = (y_min + y_max) / 2
@@ -313,7 +333,8 @@ class TableTopDataset(data.Dataset, datasets.imdb):
         # here we do not keep table. Then, we have three classes: background, table, objects
         # mask table as background
         foreground_labels[foreground_labels == 1] = 0
-        boxes, binary_masks, labels = self.process_label(foreground_labels)
+        boxes, binary_masks, labels = self.process_label_to_annos(foreground_labels)
+        foreground_labels = self.process_label(foreground_labels)
         # boxes.shape: [num_instances x 4], binary_masks.shape: [num_instances x H x W], labels.shape: [num_instances]
 
         # BGR image
@@ -331,8 +352,14 @@ class TableTopDataset(data.Dataset, datasets.imdb):
 
         # crop
         if cfg.TRAIN.SYN_CROP:
+            #print(boxes)
             im, foreground_labels, xyz_img = self.pad_crop_resize(im, foreground_labels, xyz_img)
             foreground_labels = self.process_label(foreground_labels)
+            # cv2.imshow("image", im)
+            # cv2.waitKey(0)
+            # cv2.imshow("label", foreground_labels*30)
+            # cv2.waitKey(0)
+            boxes, binary_masks, labels = self.process_label_to_annos(foreground_labels)
 
         # sample labels
         if cfg.TRAIN.EMBEDDING_SAMPLING:
@@ -348,8 +375,7 @@ class TableTopDataset(data.Dataset, datasets.imdb):
         record["raw_depth"] = xyz_img
         record["file_name"] = filename
         record["image_id"] = idx
-        record["height"] = self.params['img_height']
-        record["width"] = self.params['img_width']
+
         # record["depth"] = torch.as_tensor(np.ascontiguousarray(xyz_img.transpose(2, 0, 1)))
         #torch.permute(torch.from_numpy(xyz_img), (2,0,1))
         objs = []
@@ -371,6 +397,8 @@ class TableTopDataset(data.Dataset, datasets.imdb):
         im_tensor -= self._pixel_mean
         image_blob = im_tensor.permute(2, 0, 1)
         record['image_color'] = image_blob
+        record["height"] = image_blob.shape[-2]
+        record["width"] = image_blob.shape[-1]
 
         if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
             depth_blob = torch.from_numpy(xyz_img).permute(2, 0, 1)

@@ -98,9 +98,6 @@ class Trainer(DefaultTrainer):
 
     @classmethod
     def build_train_loader(cls, cfg):
-        if cfg.INPUT.DATASET_MAPPER_NAME == "unseen_instance":
-            mapper = UnseenInstanceDatasetMapper(cfg, True)
-            return build_detection_train_loader(cfg, mapper=mapper)
         if cfg.INPUT.DATASET_MAPPER_NAME == "mask_former_instance":
             mapper = MaskFormerInstanceDatasetMapper(cfg, True)
             return build_detection_train_loader(cfg, mapper=mapper)
@@ -108,7 +105,23 @@ class Trainer(DefaultTrainer):
         dataloader = build_detection_train_loader(cfg,
                                                   mapper=DatasetMapper(cfg, is_train=True))
         return dataloader
-
+        # dataloader = build_detection_train_loader(cfg)
+        # return dataloader
+        # # Instance segmentation dataset mapper
+        # elif cfg.INPUT.DATASET_MAPPER_NAME == "mask_former_instance":
+        #     mapper = MaskFormerInstanceDatasetMapper(cfg, True)
+        #     return build_detection_train_loader(cfg, mapper=mapper)
+        # # coco instance segmentation lsj new baseline
+        # elif cfg.INPUT.DATASET_MAPPER_NAME == "coco_instance_lsj":
+        #     mapper = COCOInstanceNewBaselineDatasetMapper(cfg, True)
+        #     return build_detection_train_loader(cfg, mapper=mapper)
+        # # coco panoptic segmentation lsj new baseline
+        # elif cfg.INPUT.DATASET_MAPPER_NAME == "coco_panoptic_lsj":
+        #     mapper = COCOPanopticNewBaselineDatasetMapper(cfg, True)
+        #     return build_detection_train_loader(cfg, mapper=mapper)
+        # else:
+        #     mapper = None
+        #     return build_detection_train_loader(cfg, mapper=mapper)
 
     @classmethod
     def build_lr_scheduler(cls, cfg, optimizer):
@@ -276,14 +289,13 @@ def setup(args):
     add_deeplab_config(cfg)
     #add_maskformer2_config(cfg)
     add_meanshiftformer_config(cfg)
-    cfg_file = "configs/crop_tabletop_pretrained.yaml"
+    cfg_file = "configs/coco_ms/instance-segmentation/tabeltop_pretrained.yaml"
     #cfg_file = "configs/coco/instance-segmentation/swin/maskformer2_swin_base_384_bs16_50ep.yaml"
     cfg.merge_from_file(cfg_file)
-    #add_tabletop_config(cfg)
+    add_tabletop_config(cfg)
     # cfg.merge_from_file(args.config_file)
     # cfg.merge_from_list(args.opts)
-    cfg.OUTPUT_DIR = "./output_1007_crop"
-    # cfg.INPUT.INPUT_IMAGE = 'RGB'
+    #cfg.OUTPUT_DIR = "./output_1003"
     #cfg.MODEL.WEIGHTS = ""
     # cfg.SOLVER.MAX_ITER = 2000
     # cfg.SOLVER.CHECKPOINT_PERIOD = 1000

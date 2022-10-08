@@ -11,6 +11,9 @@ from .data.dataset_mappers.coco_panoptic_new_baseline_dataset_mapper import COCO
 from .data.dataset_mappers.mask_former_instance_dataset_mapper import (
     MaskFormerInstanceDatasetMapper,
 )
+from .data.dataset_mappers.unseen_instance_dataset_mapper import (
+    UnseenInstanceDatasetMapper,
+)
 from .data.dataset_mappers.mask_former_panoptic_dataset_mapper import (
     MaskFormerPanopticDatasetMapper,
 )

@@ -3,6 +3,12 @@ import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.utils.data
 
+from meanshiftformer.config import add_meanshiftformer_config
+from detectron2.config import get_cfg
+from tabletop_config import add_tabletop_config
+from detectron2.projects.deeplab import add_deeplab_config
+from .topk_test_utils import Predictor_RGBD, get_confident_instances, combine_masks
+
 import argparse
 import pprint
 import time, os, sys
@@ -14,7 +20,7 @@ import glob
 import json
 
 import _init_paths
-from fcn.test_dataset import test_sample
+from fcn.test_dataset import test_sample, filter_labels_depth
 from fcn.config import cfg, cfg_from_file, get_output_dir
 import networks
 from utils.blob import pad_im
@@ -22,6 +28,28 @@ from utils import mask as util_
 
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+def get_predictor(input_image="RGBD_ADD"):
+# build model
+    cfg = get_cfg()
+    add_deeplab_config(cfg)
+    add_meanshiftformer_config(cfg)
+    #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
+    cfg_file = "../../Mask2Former/configs/coco_ms/instance-segmentation/tabeltop_pretrained.yaml"
+    cfg.merge_from_file(cfg_file)
+    add_tabletop_config(cfg)
+    cfg.SOLVER.IMS_PER_BATCH = 1 #
+    # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/output_RGB/model_0004999.pth"
+    cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
+    cfg.INPUT.INPUT_IMAGE = input_image
+    # arguments frequently tuned
+    cfg.TEST.DETECTIONS_PER_IMAGE = 20
+    weight_path = "../../Mask2Former/output_0923_kappa30/model_0139999.pth"
+    #cfg.device = "cuda:0"
+    cfg.MODEL.WEIGHTS = weight_path
+    predictor = Predictor_RGBD(cfg)
+    return predictor, cfg
+
 def get_backbone():
     num_classes = 2
     pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
@@ -90,6 +118,53 @@ def get_backbone_crop():
         param.requires_grad = False
 
     return network_crop
+
+def get_crop_sample_and_features(image, depth, label, topk=True, confident_score=0.9, low_threshold=0.4):
+    predictor, _ = get_predictor()
+    network_crop = get_backbone_crop()
+    sample = {}
+    sample["image"] = image
+    sample["depth"] = depth
+    sample["label"] = label
+    # if cfg.INPUT.INPUT_IMAGE == "DEPTH":
+    #     outputs = predictor(sample["raw_depth"])
+    # else:
+    #     outputs = predictor(im)
+    # if cfg.INPUT.INPUT_IMAGE == 'DEPTH' or 'RGBD' in cfg.INPUT.INPUT_IMAGE:
+    #     depth = sample['depth'].cuda()
+    # else:
+    #     depth = None
+    outputs = predictor(sample)
+    confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
+                                                  num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
+                                                  low_threshold=low_threshold)
+    binary_mask = combine_masks(confident_instances)
+
+
+    out_label = torch.as_tensor(binary_mask).unsqueeze(dim=0).cuda()
+    #print("depth shape: ", depth.shape)
+    if len(depth.shape) == 3:
+        depth = torch.unsqueeze(depth, dim=0)
+    if len(image.shape) == 3:
+        image = torch.unsqueeze(image, dim=0)
+    if depth is not None:
+        # filter labels on zero depth
+        out_label = filter_labels_depth(out_label, depth, 0.8)
+
+    # zoom in refinement
+    out_label_refined = None
+    if network_crop is not None:
+        rgb_crop, out_label_crop, rois, depth_crop = crop_rois(image, out_label.clone(), depth)
+        if rgb_crop.shape[0] > 0:
+            features_crop = network_crop(rgb_crop, out_label_crop, depth_crop)
+            labels_crop, selected_pixels_crop = clustering_features(features_crop, num_seeds=num_of_ms_seed)
+            # result_crop = cluster_crop(rgb_crop, depth_crop, features_crop)
+            # confident_instances_crop = get_confident_instances(result_crop, topk=topk, score=confident_score,
+            #                                               num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
+            #                                               low_threshold=low_threshold)
+            # binary_mask_crop = combine_masks(confident_instances_crop)
+            # labels_crop = torch.as_tensor(binary_mask_crop).unsqueeze(dim=0).cuda()
+            out_label_refined, labels_crop = match_label_crop(out_label, labels_crop.cuda(), out_label_crop, rois, depth_crop)
 # save data
 def save_data(file_rgb, out_label_refined, roi, features_crop):
 

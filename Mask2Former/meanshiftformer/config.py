@@ -35,6 +35,7 @@ def add_meanshiftformer_config(cfg):
     cfg.MODEL.MASK_FORMER.MASK_WEIGHT = 20.0
     # embedding loss
     cfg.MODEL.EMBEDDING = CN()
+    cfg.MODEL.EMBEDDING.FEATURE_CROP = False
     cfg.MODEL.EMBEDDING.USE_LOSS = False
     cfg.MODEL.EMBEDDING.WEIGHT_LOSS = 5.0
     cfg.MODEL.EMBEDDING.ALPHA = 0.02

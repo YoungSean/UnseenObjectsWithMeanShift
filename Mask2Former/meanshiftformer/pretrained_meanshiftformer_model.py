@@ -4,7 +4,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'lib'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'tools'))
-from get_network import get_backbone
+#from get_network import get_backbone
+from lib.fcn.get_network_crop import get_backbone, get_backbone_crop
 
 from typing import Tuple
 
@@ -81,6 +82,8 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         lambda_inter: float,
         metric: str,
         normalize: bool,
+        # choose backbone
+        feature_crop: bool,
 
     ):
         """
@@ -137,7 +140,12 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
 
         if not self.semantic_on:
             assert self.sem_seg_postprocess_before_inference
-        self.pretrained_backbone = get_backbone()
+
+        self.feature_crop = feature_crop
+        if feature_crop:
+            self.pretrained_backbone = get_backbone_crop()
+        else:
+            self.pretrained_backbone = get_backbone()
         self.pretrained_backbone.to(self.device)
 
     @classmethod
@@ -214,6 +222,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
             "lambda_inter": cfg.MODEL.EMBEDDING.LAMBDA_INTER,
             "metric": cfg.MODEL.EMBEDDING.METRIC,
             "normalize": cfg.MODEL.EMBEDDING.NORMALIZE,
+            "feature_crop": cfg.MODEL.EMBEDDING.FEATURE_CROP,
 
         }
 
@@ -221,7 +230,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
     def device(self):
         return self.pixel_mean.device
 
-    def forward(self, batched_inputs,features=None):
+    def forward(self, batched_inputs):
         """
         Args:
             batched_inputs: a list, batched outputs of :class:`DatasetMapper`.
@@ -264,11 +273,11 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         #images_depth = torch.stack(images_depth, dim=0)
             images_depth = ImageList.from_tensors(images_depth, self.size_divisibility)
         #features = self.backbone(images.tensor)
-        if features is None:
-            if self.use_embedding_loss:
-                features = self.pretrained_backbone(images.tensor, None, images_depth.tensor)
-            else:
-                features = self.pretrained_backbone(images.tensor, None, images_depth.tensor).detach()
+
+        if self.use_embedding_loss:
+            features = self.pretrained_backbone(images.tensor, None, images_depth.tensor)
+        else:
+            features = self.pretrained_backbone(images.tensor, None, images_depth.tensor).detach()
         norm_features = F.normalize(features, p=2, dim=1)
         new_features = {}
         new_features['res5'] = norm_features

@@ -1,15 +1,26 @@
-_BASE_: Base-COCO-InstanceSegmentation.yaml
-#OUTPUT_DIR: "./output_1003_pretrained_std255"
+_BASE_: tabletop_pretrained.yaml
+OUTPUT_DIR: "./output_1003_pretrained_std255"
+INPUT:
+  MASK_FORMAT: "bitmask"
+  IMAGE_SIZE: 224
+  MIN_SIZE_TRAIN: (224,)
+  #MIN_SIZE_TEST: (224,)
+  MAX_SIZE_TRAIN: 224
+  MAX_SIZE_TEST: 224
+  MIN_SIZE_TEST: 0
+  DATASET_MAPPER_NAME: "unseen_instance"
 SOLVER:
   IMS_PER_BATCH: 1
   BASE_LR: 0.0001
   #STEPS: (327778, 355092)
-  MAX_ITER: 2000
+  MAX_ITER: 300
   CHECKPOINT_PERIOD: 1000
 MODEL:
+  MASK_ON: True
   PIXEL_MEAN: [102.9801, 115.9465, 122.7717]
   META_ARCHITECTURE: "PretrainedMeanShiftMaskFormer"
   EMBEDDING:
+    FEATURE_CROP: True
     USE_LOSS: False
   SEM_SEG_HEAD:
     NAME: "PretrainedMeanShiftMaskFormerHead"
@@ -46,7 +57,7 @@ MODEL:
     PRE_NORM: False
     ENFORCE_INPUT_PROJ: False
     SIZE_DIVISIBILITY: 32
-    DEC_LAYERS: 7  # =1+k, means that k decoder layers, add one for the loss on learnable query
+    DEC_LAYERS: 5  # =1+k, means that k decoder layers, add one for the loss on learnable query
     TRAIN_NUM_POINTS: 12544
     OVERSAMPLE_RATIO: 3.0
     IMPORTANCE_SAMPLE_RATIO: 0.75

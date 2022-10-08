@@ -33,7 +33,7 @@ import warnings
 import torch
 from config import cfg
 warnings.simplefilter("ignore", UserWarning)
-
+from topk_test_utils import Predictor_RGBD, test_dataset, test_sample, test_sample_crop, test_dataset_crop
 # get network crop
 cfg.device = "cuda:0"
 num_classes = 2
@@ -50,26 +50,31 @@ else:
     network_crop = None
 
 
+def get_predictor(input_image="RGBD_ADD"):
 # build model
-cfg = get_cfg()
-add_deeplab_config(cfg)
-#add_maskformer2_config(cfg)
-add_meanshiftformer_config(cfg)
-#cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
-cfg_file = "../../Mask2Former/configs/coco_ms/instance-segmentation/tabeltop_pretrained.yaml"
-cfg.merge_from_file(cfg_file)
-add_tabletop_config(cfg)
-cfg.SOLVER.IMS_PER_BATCH = 1 #
-# cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/output_RGB/model_0004999.pth"
-cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
+    cfg = get_cfg()
+    add_deeplab_config(cfg)
+    add_meanshiftformer_config(cfg)
+    #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
+    cfg_file = "../../Mask2Former/configs/coco_ms/instance-segmentation/tabeltop_pretrained.yaml"
+    cfg.merge_from_file(cfg_file)
+    add_tabletop_config(cfg)
+    cfg.SOLVER.IMS_PER_BATCH = 1 #
+    # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/output_RGB/model_0004999.pth"
+    cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
+    cfg.INPUT.INPUT_IMAGE = input_image
+    # arguments frequently tuned
+    cfg.TEST.DETECTIONS_PER_IMAGE = 20
+    weight_path = "../../Mask2Former/output_0923_kappa30/model_0139999.pth"
+    #cfg.device = "cuda:0"
+    cfg.MODEL.WEIGHTS = weight_path
+    predictor = Predictor_RGBD(cfg)
+    return predictor, cfg
 
-cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD'
-# arguments frequently tuned
-cfg.TEST.DETECTIONS_PER_IMAGE = 20
-
+predictor, cfg = get_predictor()
 
 # cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD' #"RGBD_ADD" #'DEPTH'
-weight_path = "../../Mask2Former/output_0923_kappa30/model_0139999.pth"
+
 #weight_path = "../../Mask2Former/output_0923_kappa30/model_0139999.pth"
 
 
@@ -85,38 +90,40 @@ for d in ["train", "test"]:
         DatasetCatalog.register("tabletop_object_" + d, lambda d=d: TableTopDataset(d))
     else:
         DatasetCatalog.register("tabletop_object_" + d, lambda d=d: getTabletopDataset(d))
-    if cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES == 1:
-        MetadataCatalog.get("tabletop_object_" + d).set(thing_classes=['object'])
-    else:
-        MetadataCatalog.get("tabletop_object_" + d).set(thing_classes=['background', 'object'])
+    # if cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES == 1:
+    #     MetadataCatalog.get("tabletop_object_" + d).set(thing_classes=['object'])
+    # else:
+    #     MetadataCatalog.get("tabletop_object_" + d).set(thing_classes=['background', 'object'])
 metadata = MetadataCatalog.get("tabletop_object_train")
 
-from topk_test_utils import Predictor_RGBD, test_dataset, test_sample, test_sample_crop, test_dataset_crop
 
-cfg.device = "cuda:0"
-cfg.MODEL.WEIGHTS = weight_path
-predictor = Predictor_RGBD(cfg)
-#test_sample(cfg, ocid_dataset[41], predictor, visualization=True)
+
+
+
+
+
+test_sample(cfg, ocid_dataset[41], predictor, visualization=True)
 #test_sample_crop(cfg, dataset[6], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
 #test_sample_crop(cfg, ocid_dataset[41], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
 #test_sample(cfg, dataset[4], predictor, visualization=True)
 #test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
 #test_dataset(cfg, dataset, predictor, visualization=False, topk=True)
 
-#test_dataset_crop(cfg, dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9)
+#test_dataset_crop(cfg, dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9, num_of_ms_seed=5)
 
-met_all = []
-met_refined_all= []
-for i in range(40, 60):
-    metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, network_crop, visualization=False, topk=False, confident_score=0.8)
-    met_all.append(metrics["Boundary F-measure"])
-    met_refined_all.append(metrics_refined["Boundary F-measure"])
-
-print(np.mean(np.array(met_all)))
-print(np.mean(np.array(met_refined_all)))
-#     test_sample(cfg, ocid_dataset[i], predictor, visualization=True, topk=False,
-#                      confident_score=0.8)
+# met_all = []
+# met_refined_all= []
+# for i in range(19, 20):
+#     metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, network_crop, visualization=True, topk=False, confident_score=0.9, num_of_ms_seed=16)
+#     met_all.append(metrics["Boundary F-measure"])
+#     met_refined_all.append(metrics_refined["Boundary F-measure"])
+#
+# print("Boundary F-measure", np.mean(np.array(met_all)))
+# print("Refined Boundary F-measure", np.mean(np.array(met_refined_all)))
+#     test_sample(cfg, ocid_dataset[i], predictor, visualization=True, topk=True,
+                     # confident_score=0.8)
 # OCID dataset
 #test_dataset(cfg, ocid_dataset, predictor, visualization=False)
 #test_dataset(cfg, ocid_dataset, predictor, visualization=True, topk=False, confident_score=0.9)
-#test_dataset_crop(cfg, ocid_dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9)
+# test_dataset_crop(cfg, ocid_dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9, num_of_ms_seed=5)
+#test_dataset_crop(cfg, dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9)
