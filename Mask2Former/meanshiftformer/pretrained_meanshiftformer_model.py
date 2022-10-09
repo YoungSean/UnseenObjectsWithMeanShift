@@ -260,9 +260,10 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
             images = batched_inputs[0]["image"].to(self.device)
         else:
             images = [x["image"].to(self.device) for x in batched_inputs]
-        #pixel_mean = torch.tensor(np.array([[[102.9801, 115.9465, 122.7717]]]) / 255.0).float()
-        if not self.feature_crop:
-            images = [(x - self.pixel_mean) / self.pixel_std for x in images]
+
+        # disable the normalization, just use the image from data mapper
+        # if not self.feature_crop:
+        #     images = [(x - self.pixel_mean) / self.pixel_std for x in images]
         #images = [(x - self.pixel_mean / 255.0) for x in images]
         #images = torch.stack(images, dim=0)
         images = ImageList.from_tensors(images, self.size_divisibility)

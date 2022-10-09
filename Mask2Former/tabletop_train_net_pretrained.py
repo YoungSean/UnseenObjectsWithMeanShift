@@ -276,13 +276,13 @@ def setup(args):
     add_deeplab_config(cfg)
     #add_maskformer2_config(cfg)
     add_meanshiftformer_config(cfg)
-    cfg_file = "configs/crop_tabletop_pretrained.yaml"
+    cfg_file = "configs/tabletop_pretrained.yaml"
     #cfg_file = "configs/coco/instance-segmentation/swin/maskformer2_swin_base_384_bs16_50ep.yaml"
     cfg.merge_from_file(cfg_file)
     #add_tabletop_config(cfg)
     # cfg.merge_from_file(args.config_file)
     # cfg.merge_from_list(args.opts)
-    cfg.OUTPUT_DIR = "./output_1007_crop"
+    cfg.OUTPUT_DIR = "./output_1008_normal"
     # cfg.INPUT.INPUT_IMAGE = 'RGB'
     #cfg.MODEL.WEIGHTS = ""
     # cfg.SOLVER.MAX_ITER = 2000

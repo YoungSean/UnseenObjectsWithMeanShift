@@ -13,7 +13,7 @@ INPUT:
   MAX_SIZE_TRAIN: 800
   MAX_SIZE_TEST: 800
   MIN_SIZE_TEST: 0
-  DATASET_MAPPER_NAME: "mask_former_instance"
+  DATASET_MAPPER_NAME: "unseen_instance"
   RANDOM_FLIP: "none"
   #INPUT_IMAGE: 'RGB'
 DATASETS:
