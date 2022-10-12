@@ -282,10 +282,10 @@ def setup(args):
     #add_tabletop_config(cfg)
     # cfg.merge_from_file(args.config_file)
     # cfg.merge_from_list(args.opts)
-    cfg.OUTPUT_DIR = "./output_1008_normal"
+    cfg.OUTPUT_DIR = "./output_1012_normal"
     # cfg.INPUT.INPUT_IMAGE = 'RGB'
     #cfg.MODEL.WEIGHTS = ""
-    # cfg.SOLVER.MAX_ITER = 2000
+    cfg.SOLVER.MAX_ITER = 2000
     # cfg.SOLVER.CHECKPOINT_PERIOD = 1000
     cfg.freeze()
     default_setup(cfg, args)

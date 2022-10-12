@@ -276,8 +276,9 @@ class SimpleBasePixelDecoder(nn.Module):
             if num_cur_levels < self.maskformer_num_feature_levels:
                 multi_scale_features.append(y)
                 num_cur_levels += 1
-        return self.mask_features(y), None, multi_scale_features
-        #return y, None, multi_scale_features
+        #print('y shape', y.shape)
+        #return self.mask_features(y), None, multi_scale_features
+        return y, None, multi_scale_features
 
     def forward(self, features, targets=None):
         logger = logging.getLogger(__name__)

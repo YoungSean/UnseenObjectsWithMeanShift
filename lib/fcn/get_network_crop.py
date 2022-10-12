@@ -65,7 +65,7 @@ def get_backbone():
 
     network = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data).cuda()
     # network = torch.nn.DataParallel(network, device_ids=[0]).cuda()
-    cudnn.benchmark = True
+    # cudnn.benchmark = True
     # network.eval()
     for param in network.parameters():
         param.requires_grad = False
@@ -108,8 +108,8 @@ def get_backbone_crop():
     if pretrained_crop:
         network_data_crop = torch.load(pretrained_crop)
         network_crop = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda()#cuda(device=cfg.device)
-        network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda() #cuda(device=cfg.device)
-        network_crop.eval()
+        # network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda() #cuda(device=cfg.device)
+        # network_crop.eval()
     else:
         network_crop = None
 

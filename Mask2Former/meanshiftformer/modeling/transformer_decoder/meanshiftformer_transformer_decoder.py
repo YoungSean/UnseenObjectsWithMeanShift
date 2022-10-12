@@ -1018,6 +1018,7 @@ class PretrainedMeanShiftTransformerDecoder(nn.Module):
         #     mask_embed = F.normalize(mask_embed, dim=-1)
         #     mask_features = F.normalize(mask_features, dim=1)
         outputs_mask = torch.einsum("bqc,bchw->bqhw", mask_embed, mask_features)
+        #print("mask feature shape", mask_features.shape)
 
         if self.disable_attention_mask:
             attn_mask = None # no need for mean shift cross attention
