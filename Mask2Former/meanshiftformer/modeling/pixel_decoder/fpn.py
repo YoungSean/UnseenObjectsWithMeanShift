@@ -235,14 +235,15 @@ class SimpleBasePixelDecoder(nn.Module):
         # self.output_convs = output_convs[::-1]
 
         self.mask_dim = mask_dim
-        self.mask_features = Conv2d(
-            conv_dim,
-            mask_dim,
-            kernel_size=3,
-            stride=1,
-            padding=1,
-        )
-        weight_init.c2_xavier_fill(self.mask_features)
+        if self.mask_dim != 64:
+            self.mask_features = Conv2d(
+                conv_dim,
+                mask_dim,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+            )
+            weight_init.c2_xavier_fill(self.mask_features)
 
         self.maskformer_num_feature_levels = 1 #3  # always use 3 scales
 
@@ -277,8 +278,11 @@ class SimpleBasePixelDecoder(nn.Module):
                 multi_scale_features.append(y)
                 num_cur_levels += 1
         #print('y shape', y.shape)
-        #return self.mask_features(y), None, multi_scale_features
-        return y, None, multi_scale_features
+        if self.mask_dim == 64:
+            return y, None, multi_scale_features
+        else:
+            return self.mask_features(y), None, multi_scale_features
+
 
     def forward(self, features, targets=None):
         logger = logging.getLogger(__name__)
