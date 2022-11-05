@@ -186,12 +186,16 @@ def test_sample(cfg, sample, predictor, visualization = False, topk=True, confid
     #     outputs = predictor(sample["raw_depth"])
     # else:
     #     outputs = predictor(im)
+    image = sample['image_color'].cuda()
+    sample["image"] = image
+    sample["height"] = image.shape[-2]  # image: 3XHXW, tensor
+    sample["width"] = image.shape[-1]
     outputs = predictor(sample)
     confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
                                                   num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
                                                   low_threshold=low_threshold)
     binary_mask = combine_masks(confident_instances)
-    print(binary_mask)
+    # print(binary_mask)
     #np.save("pred51", binary_mask)
     metrics = multilabel_metrics(binary_mask, gt)
     print(f"metrics: ", metrics)
@@ -263,19 +267,29 @@ def get_result_from_network(cfg, image, depth, label, predictor, topk=True, conf
     confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
                                                   num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
                                                   low_threshold=low_threshold)
+    if True:
+        im = image.cpu().numpy().transpose((1, 2, 0)) * 255.0
+        im += np.array([[[102.9801, 115.9465, 122.7717]]])
+        im = im.astype(np.uint8)
+        v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
+        out = v.draw_instance_predictions(confident_instances.to("cpu"))
+        visual_result = out.get_image()[:, :, ::-1]
+        # cv2.imwrite(sample["file_name"][-6:-3]+"pred.png", visual_result)
+        cv2.imshow("image", visual_result)
+        cv2.waitKey(0)
+        # cv2.waitKey(100000)
+        cv2.destroyAllWindows()
     binary_mask = combine_masks(confident_instances)
     return binary_mask
 
-def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4, num_of_ms_seed=10):
+def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4, print_result=False):
     #cluster_crop = Predictor_RGBD_CROP(cfg)
     # First network: the image needs the original one.
     image = sample['image_color'].cuda() # for future crop
     im = cv2.imread(sample["file_name"])  # this is for visualization
-    im_input = im
-    if cfg.INPUT.FORMAT == "RGB":
-        # whether the model expects BGR inputs or RGB
-        im_input = im_input[:, :, ::-1]
-    sample["image"] = torch.as_tensor(im_input.astype("float32").transpose(2, 0, 1))
+
+    # sample["image"] = torch.as_tensor(im_input.astype("float32").transpose(2, 0, 1))
+    sample["image"] = image
     sample["height"] = image.shape[-2] # image: 3XHXW, tensor
     sample["width"] = image.shape[-1]
     if "label" in sample.keys():
@@ -298,7 +312,9 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
                                                   low_threshold=low_threshold)
     binary_mask = combine_masks(confident_instances)
     metrics = multilabel_metrics(binary_mask, gt)
-    print("first:", metrics)
+    if print_result:
+        print("file name: ", sample["file_name"])
+        print("first:", metrics)
 
     if visualization:
         v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
@@ -318,7 +334,13 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
         image = torch.unsqueeze(image, dim=0)
     if depth is not None:
         # filter labels on zero depth
-        out_label = filter_labels_depth(out_label, depth, 0.8)
+        if 'OSD' in sample["file_name"]:
+            # print("filter 0.8")
+            out_label = filter_labels_depth(out_label, depth, 0.8)
+        else:
+            out_label = filter_labels_depth(out_label, depth, 0.5)
+
+
 
     # zoom in refinement
     out_label_refined = None
@@ -355,12 +377,9 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
     else:
         prediction_refined = prediction.copy()
     metrics_refined = multilabel_metrics(prediction_refined, gt)
-    print("refined: ", metrics_refined)
-    print("========")
-    # prediction_refined = refine_with_watershed(im, prediction_refined)
-    # metrics_refined = multilabel_metrics(prediction_refined, gt)
-    # print("refined with watershed: ", metrics_refined)
-    # print("========")
+    if print_result:
+        print("refined: ", metrics_refined)
+        print("========")
 
     return metrics, metrics_refined
 
@@ -405,12 +424,12 @@ def test_dataset(cfg,dataset, predictor, visualization=False, topk=True, confide
     print(result)
     print('====================END=================================')
 
-def test_dataset_crop(cfg,dataset, predictor, network_crop, visualization=False, topk=True, confident_score=0.9, low_threshold=0.4, num_of_ms_seed=10):
+def test_dataset_crop(cfg,dataset, predictor, network_crop, visualization=False, topk=True, confident_score=0.9, low_threshold=0.4):
     metrics_all = []
     metrics_all_refined = []
     for i in trange(len(dataset)):
         metrics, metrics_refined = test_sample_crop(cfg, dataset[i], predictor, network_crop, visualization=visualization,
-                              topk=topk, confident_score=confident_score, low_threshold=low_threshold, num_of_ms_seed=num_of_ms_seed)
+                              topk=topk, confident_score=confident_score, low_threshold=low_threshold)
         metrics_all.append(metrics)
         metrics_all_refined.append(metrics_refined)
     # for i in tqdm(dataset):

@@ -65,10 +65,10 @@ class OSDObject(data.Dataset, datasets.imdb):
         # BGR image
         filename = self.image_files[idx]
         im = cv2.imread(filename)
-        if cfg.TRAIN.CHROMATIC and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
-            im = chromatic_transform(im)
-        if cfg.TRAIN.ADD_NOISE and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
-            im = add_noise(im)
+        # if cfg.TRAIN.CHROMATIC and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
+        #     im = chromatic_transform(im)
+        # if cfg.TRAIN.ADD_NOISE and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
+        #     im = add_noise(im)
         im_tensor = torch.from_numpy(im) / 255.0
 
         im_tensor_bgr = im_tensor.clone()
@@ -87,7 +87,8 @@ class OSDObject(data.Dataset, datasets.imdb):
         sample = {'image_color': image_blob,
                   'image_color_bgr': im_tensor_bgr,
                   'label': label_blob,
-                  'filename': filename[index+4:]}
+                  'filename': filename[index+4:],
+                  'file_name': filename}
 
         # Depth image
         if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
