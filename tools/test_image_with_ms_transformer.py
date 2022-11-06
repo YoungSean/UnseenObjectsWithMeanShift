@@ -27,7 +27,8 @@ from fcn.config import cfg, cfg_from_file, get_output_dir
 import networks
 from utils.blob import pad_im
 from utils import mask as util_
-
+from fcn.topk_test_utils import test_sample_crop_nolabel
+from fcn.topk_test_demo import get_predictor, get_predictor_crop
 
 def parse_args():
     """
@@ -43,7 +44,7 @@ def parse_args():
                         help='initialize with pretrained checkpoint for crops',
                         default=None, type=str)
     parser.add_argument('--cfg', dest='cfg_file',
-                        help='optional config file', default=None, type=str)
+                        help='optional config file', default="experiments/cfgs/seg_resnet34_8s_embedding_cosine_rgbd_add_tabletop.yml", type=str)
     parser.add_argument('--dataset', dest='dataset_name',
                         help='dataset to train on',
                         default='shapenet_scene_train', type=str)
@@ -106,30 +107,32 @@ def read_sample(filename_color, filename_depth, camera_params):
     # bgr image
     im = cv2.imread(filename_color)
 
-    if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
+    # if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
         # depth image
-        depth_img = cv2.imread(filename_depth, cv2.IMREAD_ANYDEPTH)
-        depth = depth_img.astype(np.float32) / 1000.0
+    depth_img = cv2.imread(filename_depth, cv2.IMREAD_ANYDEPTH)
+    depth = depth_img.astype(np.float32) / 1000.0
 
-        height = depth.shape[0]
-        width = depth.shape[1]
-        fx = camera_params['fx']
-        fy = camera_params['fy']
-        px = camera_params['x_offset']
-        py = camera_params['y_offset']
-        xyz_img = compute_xyz(depth, fx, fy, px, py, height, width)
-    else:
-        xyz_img = None
+    height = depth.shape[0]
+    width = depth.shape[1]
+    fx = camera_params['fx']
+    fy = camera_params['fy']
+    px = camera_params['x_offset']
+    py = camera_params['y_offset']
+    xyz_img = compute_xyz(depth, fx, fy, px, py, height, width)
+    # else:
+    #     xyz_img = None
 
     im_tensor = torch.from_numpy(im) / 255.0
-    pixel_mean = torch.tensor(cfg.PIXEL_MEANS / 255.0).float()
+    pixel_mean = torch.tensor(np.array([[[102.9801, 115.9465, 122.7717]]]) / 255.0).float()
     im_tensor -= pixel_mean
     image_blob = im_tensor.permute(2, 0, 1)
-    sample = {'image_color': image_blob.unsqueeze(0)}
+    # sample = {'image_color': image_blob.unsqueeze(0)}
+    sample = {'image_color': image_blob}
 
-    if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
-        depth_blob = torch.from_numpy(xyz_img).permute(2, 0, 1)
-        sample['depth'] = depth_blob.unsqueeze(0)
+    # if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
+    depth_blob = torch.from_numpy(xyz_img).permute(2, 0, 1)
+    sample['depth'] = depth_blob#.unsqueeze(0)
+    sample['file_name'] = filename_color
 
     return sample
 
@@ -160,6 +163,7 @@ if __name__ == '__main__':
     cfg.MODE = 'TEST'
     print('GPU device {:d}'.format(args.gpu_id))
 
+
     # list images
     images_color = []
     filename = os.path.join(args.imgdir, args.color_name)
@@ -177,6 +181,7 @@ if __name__ == '__main__':
         images_depth.append(filename)
     images_depth.sort()
 
+
     # check if intrinsics available
     filename = os.path.join(args.imgdir, 'camera_params.json')
     if os.path.exists(filename):
@@ -186,40 +191,45 @@ if __name__ == '__main__':
         camera_params = None
 
     # prepare network
-    if args.pretrained:
-        network_data = torch.load(args.pretrained)
-        print("=> using pre-trained network '{}'".format(args.pretrained))
-    else:
-        network_data = None
-        print("no pretrained network specified")
-        sys.exit()
+    predictor, cfg = get_predictor()
+    predictor_crop, cfg_crop = get_predictor_crop()
 
-    network = networks.__dict__[args.network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data).cuda(device=cfg.device)
-    network = torch.nn.DataParallel(network, device_ids=[cfg.gpu_id]).cuda(device=cfg.device)
-    cudnn.benchmark = True
-    network.eval()
+    # if args.pretrained:
+    #     network_data = torch.load(args.pretrained)
+    #     print("=> using pre-trained network '{}'".format(args.pretrained))
+    # else:
+    #     network_data = None
+    #     print("no pretrained network specified")
+    #     sys.exit()
+    #
+    # network = networks.__dict__[args.network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data).cuda(device=cfg.device)
+    # network = torch.nn.DataParallel(network, device_ids=[cfg.gpu_id]).cuda(device=cfg.device)
+    # cudnn.benchmark = True
+    # network.eval()
+    #
+    # if args.pretrained_crop:
+    #     network_data_crop = torch.load(args.pretrained_crop)
+    #     network_crop = networks.__dict__[args.network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda(device=cfg.device)
+    #     network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda(device=cfg.device)
+    #     network_crop.eval()
+    # else:
+    #     network_crop = None
 
-    if args.pretrained_crop:
-        network_data_crop = torch.load(args.pretrained_crop)
-        network_crop = networks.__dict__[args.network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda(device=cfg.device)
-        network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda(device=cfg.device)
-        network_crop.eval()
-    else:
-        network_crop = None
-
-    if cfg.TEST.VISUALIZE:
-        index_images = np.random.permutation(len(images_color))
-    else:
-        index_images = range(len(images_color))
+    # if True: #cfg.TEST.VISUALIZE:
+    #     index_images = np.random.permutation(len(images_color))
+    # else:
+    index_images = range(len(images_color))
 
     for i in index_images:
         if os.path.exists(images_color[i]):
             print(images_color[i])
             # read sample
             sample = read_sample(images_color[i], images_depth[i], camera_params)
-
+            # print(sample["image_color"].shape)
             # run network
-            out_label, out_label_refined = test_sample(sample, network, network_crop)
+            # out_label, out_label_refined = test_sample(sample, network, network_crop)
+            test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualization=True, topk=False,
+                             confident_score=0.6, print_result=True)
             # cv2.imshow("image", out_label_refined.squeeze().numpy())
             # cv2.waitKey(0)
             # # cv2.waitKey(100000)

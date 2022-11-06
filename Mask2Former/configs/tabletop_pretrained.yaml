@@ -32,7 +32,7 @@ MODEL:
     NUM_CLASSES: 2
     LOSS_WEIGHT: 1.0
     CONVS_DIM: 64
-    MASK_DIM: 64 #256
+    MASK_DIM: 256 #256
     NORM: "GN"
     # pixel decoder
     PIXEL_DECODER_NAME: "SimpleBasePixelDecoder"

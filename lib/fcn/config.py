@@ -35,7 +35,7 @@ __C.CAD = ''
 __C.POSE = ''
 __C.BACKGROUND = ''
 __C.USE_GPU_NMS = True
-__C.MODE = 'TRAIN'
+__C.MODE = 'TEST'#'TRAIN'
 __C.INTRINSICS = ()
 __C.DATA_PATH = ''
 

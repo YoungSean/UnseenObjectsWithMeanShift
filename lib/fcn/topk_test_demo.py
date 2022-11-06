@@ -1,7 +1,7 @@
 import sys
 import os
 
-# import networks
+
 
 #print(os.path.dirname(__file__))
 sys.path.append(os.path.dirname(__file__))
@@ -18,7 +18,7 @@ from detectron2.utils.visualizer import Visualizer
 # from Mask2Former.mask2former import add_maskformer2_config
 # from mask2former import add_maskformer2_config
 from meanshiftformer.config import add_meanshiftformer_config
-from datasets import OCIDDataset
+from datasets import OCIDDataset, OSDObject
 from tqdm import tqdm, trange
 
 from datasets.tabletop_dataset import TableTopDataset, getTabletopDataset
@@ -35,19 +35,20 @@ from config import cfg
 warnings.simplefilter("ignore", UserWarning)
 from topk_test_utils import Predictor_RGBD, test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD
 # get network crop
-# cfg.device = "cuda:0"
-# num_classes = 2
-# pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
-# pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
-# network_name = "seg_resnet34_8s_embedding"
-#
-# if pretrained_crop:
-#     network_data_crop = torch.load(pretrained_crop)
-#     network_crop = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda()
-#     network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda()
-#     network_crop.eval()
-# else:
-#     network_crop = None
+import networks
+cfg.device = "cuda:0"
+num_classes = 2
+pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
+pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
+network_name = "seg_resnet34_8s_embedding"
+
+if pretrained_crop:
+    network_data_crop = torch.load(pretrained_crop)
+    network_crop = networks.__dict__[network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda()
+    network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda()
+    network_crop.eval()
+else:
+    network_crop = None
 
 
 def get_predictor(input_image="RGBD_ADD"):
@@ -56,7 +57,7 @@ def get_predictor(input_image="RGBD_ADD"):
     add_deeplab_config(cfg)
     add_meanshiftformer_config(cfg)
     #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
-    cfg_file = "../../Mask2Former/configs/coco_ms/instance-segmentation/tabeltop_pretrained.yaml"
+    cfg_file = "/home/xy/yxl/UnseenForMeanShift/Mask2Former/configs/tabletop_pretrained.yaml"
     cfg.merge_from_file(cfg_file)
     add_tabletop_config(cfg)
     cfg.SOLVER.IMS_PER_BATCH = 1 #
@@ -65,7 +66,7 @@ def get_predictor(input_image="RGBD_ADD"):
     cfg.INPUT.INPUT_IMAGE = input_image
     # arguments frequently tuned
     cfg.TEST.DETECTIONS_PER_IMAGE = 20
-    weight_path = "../../Mask2Former/output_0923_kappa30/model_0139999.pth"
+    weight_path = "/home/xy/yxl/UnseenForMeanShift/Mask2Former/server_model/norm_model_0069999.pth"
     #cfg.device = "cuda:0"
     cfg.MODEL.WEIGHTS = weight_path
     predictor = Network_RGBD(cfg)
@@ -77,7 +78,8 @@ def get_predictor_crop(input_image="RGBD_ADD"):
     add_deeplab_config(cfg)
     add_meanshiftformer_config(cfg)
     #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
-    cfg_file = "../../Mask2Former/configs/crop_tabletop_pretrained.yaml"
+    #cfg_file = "../../Mask2Former/configs/crop_tabletop_pretrained.yaml"
+    cfg_file = "/home/xy/yxl/UnseenForMeanShift/Mask2Former/configs/crop_tabletop_pretrained.yaml"
     cfg.merge_from_file(cfg_file)
     add_tabletop_config(cfg)
     cfg.SOLVER.IMS_PER_BATCH = 1 #
@@ -86,7 +88,7 @@ def get_predictor_crop(input_image="RGBD_ADD"):
     cfg.INPUT.INPUT_IMAGE = input_image
     # arguments frequently tuned
     cfg.TEST.DETECTIONS_PER_IMAGE = 20
-    weight_path = "../../Mask2Former/output_1007_crop/model_final.pth"
+    weight_path = "/home/xy/yxl/UnseenForMeanShift/Mask2Former/server_model/crop_dec9_model_final.pth"
     #cfg.device = "cuda:0"
     cfg.MODEL.WEIGHTS = weight_path
     predictor = Network_RGBD(cfg)
@@ -103,8 +105,9 @@ predictor_crop, cfg_crop = get_predictor_crop()
 # test_dataset(dataset, predictor)
 
 
-dataset = TableTopDataset(data_mapper=True,eval=True)
+#dataset = TableTopDataset(data_mapper=True,eval=True)
 ocid_dataset = OCIDDataset(image_set="test")
+osd_dataset = OSDObject(image_set="test")
 
 use_my_dataset = True
 for d in ["train", "test"]:
@@ -125,24 +128,31 @@ metadata = MetadataCatalog.get("tabletop_object_train")
 
 
 #test_sample(cfg, ocid_dataset[41], predictor, visualization=True)
+#test_sample(cfg, dataset, predictor, visualization=True, topk=True, confident_score=0.9)
 #test_sample_crop(cfg, dataset[6], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
-#test_sample_crop(cfg, ocid_dataset[41], predictor, network_crop, visualization=True, topk=False, confident_score=0.9)
-test_sample_crop(cfg, ocid_dataset[41], predictor, predictor_crop, visualization=False, topk=False, confident_score=0.9)
+
+# test_sample_crop(cfg, ocid_dataset[255], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+
+#test_sample_crop(cfg, ocid_dataset[41], predictor, network_crop, visualization=True, topk=True, confident_score=0.9,second_cluster=True)
 #test_sample(cfg, dataset[4], predictor, visualization=True)
 #test_dataset(cfg, dataset, predictor, visualization=False, topk=False, confident_score=0.9)
 #test_dataset(cfg, dataset, predictor, visualization=False, topk=True)
 
 #test_dataset_crop(cfg, dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9, num_of_ms_seed=5)
 
-met_all = []
-met_refined_all= []
-for i in range(19, 40):
-    metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, predictor_crop, visualization=False, topk=False, confident_score=0.9, num_of_ms_seed=16)
-    met_all.append(metrics["Boundary F-measure"])
-    met_refined_all.append(metrics_refined["Boundary F-measure"])
-#
-print("Boundary F-measure", np.mean(np.array(met_all)))
-print("Refined Boundary F-measure", np.mean(np.array(met_refined_all)))
+# metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+
+# met_all = []
+# met_refined_all= []
+# for i in range(350, 360):
+#     print(i)
+#     metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+#     #metrics= test_sample(cfg, ocid_dataset[i], predictor, visualization=True, topk=True, confident_score=0.9)
+#     met_all.append(metrics["Boundary F-measure"])
+#     met_refined_all.append(metrics_refined["Boundary F-measure"])
+# #
+# print("Boundary F-measure", np.mean(np.array(met_all)))
+# print("Refined Boundary F-measure", np.mean(np.array(met_refined_all)))
 #     test_sample(cfg, ocid_dataset[i], predictor, visualization=True, topk=True,
                      # confident_score=0.8)
 # OCID dataset
@@ -150,3 +160,5 @@ print("Refined Boundary F-measure", np.mean(np.array(met_refined_all)))
 #test_dataset(cfg, ocid_dataset, predictor, visualization=True, topk=False, confident_score=0.9)
 # test_dataset_crop(cfg, ocid_dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9, num_of_ms_seed=5)
 #test_dataset_crop(cfg, dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9)
+
+# test_dataset_crop(cfg, osd_dataset, predictor, predictor_crop, visualization=False, topk=False, confident_score=0.7)
