@@ -9,33 +9,4 @@ Segmenting unseen objects is a critical task in many different domains. For exam
 - Download our trained checkpoints from [here](https://drive.google.com/drive/folders/1lmmTLqlNlN4AjwzWT7lmPrMygQNS7FmR?usp=sharing).
 
 
-### Training and testing on the Tabletop Object Dataset (TOD)
-1. Download the Tabletop Object Dataset (TOD) from [here](https://drive.google.com/uc?export=download&id=1Du309Ye8J7v2c4fFGuyPGjf-C3-623vw) (34G).
-
-2. Create a symlink for the TOD dataset
-    ```Shell
-    cd $ROOT/data
-    ln -s $TOD_DATA tabletop
-    ```
-
-3. Training and testing on the TOD dataset
-    ```Shell
-    cd $ROOT
-
-    ```
-
-
-### Testing on the OCID dataset and the OSD dataset
-
-1. Download the OCID dataset from [here](https://www.acin.tuwien.ac.at/en/vision-for-robotics/software-tools/object-clutter-indoor-dataset/), and create a symbol link:
-    ```Shell
-    cd $ROOT/data
-    ln -s $OCID_dataset OCID
-    ```
-
-2. Download the OSD dataset from [here](https://www.acin.tuwien.ac.at/en/vision-for-robotics/software-tools/osd/), and create a symbol link:
-    ```Shell
-    cd $ROOT/data
-    ln -s $OSD_dataset OSD
-    ```
 
