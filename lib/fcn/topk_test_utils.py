@@ -51,35 +51,6 @@ import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
 
-# build model
-# cfg = get_cfg()
-# add_deeplab_config(cfg)
-# add_maskformer2_config(cfg)
-# #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/MSMFormer/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
-# cfg_file = "../../MSMFormer/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
-# cfg.merge_from_file(cfg_file)
-# add_tabletop_config(cfg)
-# # cfg.INPUT.INPUT_IMAGE = 'DEPTH'
-# cfg.SOLVER.IMS_PER_BATCH = 1
-# # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/MSMFormer/output_RGB/model_0004999.pth"
-# cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = 1
-
-
-# dataset = TableTopDataset(data_mapper=True,eval=True)
-# ocid_dataset = OCIDDataset(image_set="test")
-#
-# use_my_dataset = True
-# #DatasetCatalog.register("tabletop_object_train", getTabletopDataset)
-# for d in ["train", "test"]:
-#     if use_my_dataset:
-#         DatasetCatalog.register("tabletop_object_" + d, lambda d=d: TableTopDataset(d))
-#     else:
-#         DatasetCatalog.register("tabletop_object_" + d, lambda d=d: getTabletopDataset(d))
-#     if cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES == 1:
-#         MetadataCatalog.get("tabletop_object_" + d).set(thing_classes=['object'])
-#     else:
-#         MetadataCatalog.get("tabletop_object_" + d).set(thing_classes=['background', 'object'])
-# metadata = MetadataCatalog.get("tabletop_object_train")
 
 # Reference: https://www.reddit.com/r/computervision/comments/jb6b18/get_binary_mask_image_from_detectron2/
 
@@ -213,48 +184,6 @@ def test_sample(cfg, sample, predictor, visualization = False, topk=True, confid
     # metrics2 = multilabel_metrics(markers, gt)
     # print(f"metrics2: ", metrics2g)
     return metrics
-
-def refine_with_watershed(img, prediction):
-
-    thresh = prediction.astype(int)
-    # noise removal
-    kernel = np.ones((3, 3), np.uint8)
-    # opening = cv.morphologyEx(thresh, cv.MORPH_OPEN, kernel, iterations=2)
-    opening = thresh
-    opening = opening.astype('uint8')
-    sure_bg = cv.dilate(opening, kernel, iterations=3)
-    # Finding sure foreground area
-    dist_transform = cv.distanceTransform(opening, cv.DIST_L2, 5)
-    ret, sure_fg = cv.threshold(dist_transform, 0.2 * dist_transform.max(), 255, 0)
-    # Finding unknown region
-    sure_fg = np.uint8(sure_fg)
-    sure_bg = np.uint8(sure_bg)
-    unknown = cv.subtract(sure_bg, sure_fg)
-    # Marker labelling
-    ret, markers = cv.connectedComponents(sure_fg)
-    # Add one to all labels so that sure background is not 0, but 1
-    markers = markers + 1
-    # Now, mark the region of unknown with zero
-    markers[unknown == 255] = 0
-
-    markers = cv.watershed(img, markers)
-    print(np.unique(markers))
-    img[markers == -1] = [0, 0, 255]
-    print("marker type: ", markers.dtype)
-    markers = markers.astype(np.uint8)
-    markers[markers==1] = 0
-    markers[markers == 2] = 255
-    markers[markers == 3] = 200
-    markers[markers == 4] = 150
-    markers[markers == 5] = 100
-    cv.imshow("image marker", markers)
-    # # print(np.unique(markers))
-    cv2.waitKey(0)
-    # #cv.imshow("image ", img)
-    # #cv2.waitKey(0)
-    # # cv2.waitKey(100000)
-    cv2.destroyAllWindows()
-    return markers
 
 def get_result_from_network(cfg, image, depth, label, predictor, topk=True, confident_score=0.9, low_threshold=0.4, vis_crop=False):
     height = image.shape[-2]  # image: 3XHXW, tensor
@@ -437,12 +366,7 @@ def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualizati
         prediction_refined = out_label_refined
     else:
         prediction_refined = prediction.copy()
-    # metrics_refined = multilabel_metrics(prediction_refined, gt)
-    # if print_result:
-    #     print("refined: ", metrics_refined)
-    #     print("========")
 
-    # return metrics, metrics_refined
 def test_dataset(cfg,dataset, predictor, visualization=False, topk=True, confident_score=0.9, low_threshold=0.4):
     metrics_all = []
     for i in trange(len(dataset)):
@@ -537,31 +461,7 @@ def test_dataset_crop(cfg,dataset, predictor, network_crop, visualization=False,
         print('%s: %f' % (k, result_refined[k]))
     print(result_refined)
     print('========================================================')
-def test_dataset_with_weight(weight_path, cfg, dataset,topk=True, confident_score=0.9):
-    cfg.MODEL.WEIGHTS = weight_path
-    predictor = Predictor_RGBD(cfg)
-    test_dataset(cfg, dataset, predictor, topk=topk, confident_score=confident_score)
 
-def test_dataset_with_weight(weight_path, cfg, sample,topk=True, confident_score=0.9):
-    cfg.MODEL.WEIGHTS = weight_path
-    predictor = Predictor_RGBD(cfg)
-    test_dataset(cfg, sample, predictor, topk=topk, confident_score=confident_score)
 
-#
-# use_depth = True
-# if use_depth:
-#     cfg.INPUT.INPUT_IMAGE = 'DEPTH'
-# # test_dataset(dataset, predictor)
-#
-# #weight_path = "../../MSMFormer/output_RGB_n2/model_final.pth"
-# #cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = 2
-# weight_path = "../../MSMFormer/depth_output_n1_lr5/model_final.pth"
-# cfg.MODEL.WEIGHTS = weight_path
-# predictor = Predictor_RGBD(cfg)
-# test_sample(ocid_dataset[4], predictor, visualization=True)
-# # test_dataset(ocid_dataset, predictor, confident_score=0.9)
-# #test_dataset(ocid_dataset, predictor)
-# test_dataset(dataset, predictor)
-# print(ocid_dataset[4])
 
 
