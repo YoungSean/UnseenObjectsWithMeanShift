@@ -262,7 +262,7 @@ class MeanShiftMaskFormer(nn.Module):
             # print("embedding loss: ", emdedding_loss)
             # print("inter loss", inter_cluster_loss)
             # print("intra loss: ", intra_cluster_loss)
-            # Mask2Former loss
+            # MSMFormer loss
             losses = self.criterion(outputs, targets)
             # add embedding loss
             if self.use_embedding_loss:

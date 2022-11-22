@@ -297,7 +297,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
                 targets = None
 
             # bipartite matching-based loss
-            # Mask2Former loss
+            # MSMFormer loss
             losses = self.criterion(outputs, targets)
             # add embedding loss
             if self.use_embedding_loss:

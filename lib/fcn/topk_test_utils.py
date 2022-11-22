@@ -7,7 +7,7 @@ from fcn.test_dataset import filter_labels_depth, crop_rois, clustering_features
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'Mask2Former'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'MSMFormer'))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'datasets'))
 #print(os.path.join(os.path.dirname(__file__), '..', '..'))
 
@@ -15,7 +15,7 @@ from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.data import MetadataCatalog, DatasetCatalog, build_detection_train_loader, build_detection_test_loader
 from detectron2.evaluation import DatasetEvaluator, inference_on_dataset, DatasetEvaluators
 from detectron2.utils.visualizer import Visualizer
-# from Mask2Former.mask2former import add_maskformer2_config
+# from MSMFormer.mask2former import add_maskformer2_config
 # from mask2former import add_maskformer2_config
 
 from datasets import OCIDDataset
@@ -55,13 +55,13 @@ from matplotlib import pyplot as plt
 # cfg = get_cfg()
 # add_deeplab_config(cfg)
 # add_maskformer2_config(cfg)
-# #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
-# cfg_file = "../../Mask2Former/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
+# #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/MSMFormer/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
+# cfg_file = "../../MSMFormer/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
 # cfg.merge_from_file(cfg_file)
 # add_tabletop_config(cfg)
 # # cfg.INPUT.INPUT_IMAGE = 'DEPTH'
 # cfg.SOLVER.IMS_PER_BATCH = 1
-# # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/Mask2Former/output_RGB/model_0004999.pth"
+# # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/MSMFormer/output_RGB/model_0004999.pth"
 # cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = 1
 
 
@@ -353,7 +353,7 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
                 labels_crop[i] = torch.from_numpy(binary_mask_crop)
             out_label_refined, labels_crop = match_label_crop(out_label, labels_crop.cuda(), out_label_crop, rois, depth_crop)
 
-    if visualization:
+    if visualization and rgb_crop.shape[0] > 0:
         bbox = None
         _vis_minibatch_segmentation_final(image, depth, label, out_label, out_label_refined, None,
             selected_pixels=None, bbox=bbox)
@@ -553,9 +553,9 @@ def test_dataset_with_weight(weight_path, cfg, sample,topk=True, confident_score
 #     cfg.INPUT.INPUT_IMAGE = 'DEPTH'
 # # test_dataset(dataset, predictor)
 #
-# #weight_path = "../../Mask2Former/output_RGB_n2/model_final.pth"
+# #weight_path = "../../MSMFormer/output_RGB_n2/model_final.pth"
 # #cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES = 2
-# weight_path = "../../Mask2Former/depth_output_n1_lr5/model_final.pth"
+# weight_path = "../../MSMFormer/depth_output_n1_lr5/model_final.pth"
 # cfg.MODEL.WEIGHTS = weight_path
 # predictor = Predictor_RGBD(cfg)
 # test_sample(ocid_dataset[4], predictor, visualization=True)
