@@ -49,11 +49,7 @@ If you find Mean Shift Mask Transformer useful in your research, please consider
     ```Shell
     cd $ROOT
 
-    # multi-gpu training, we used 4 GPUs
-    ./experiments/scripts/seg_resnet34_8s_embedding_cosine_rgbd_add_train_tabletop.sh
-
-    # testing, $GPU_ID can be 0, 1, etc.
-    ./experiments/scripts/seg_resnet34_8s_embedding_cosine_rgbd_add_test_tabletop.sh $GPU_ID $EPOCH
+    # multi-gpu training, we used 4 GPUs, to do
 
     ```
 
