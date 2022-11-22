@@ -27,8 +27,8 @@ from fcn.config import cfg, cfg_from_file, get_output_dir
 import networks
 from utils.blob import pad_im
 from utils import mask as util_
-from fcn.topk_test_utils import test_sample_crop_nolabel
-from fcn.topk_test_demo import get_predictor, get_predictor_crop
+from fcn.test_utils import test_sample_crop_nolabel
+from fcn.test_demo import get_predictor, get_predictor_crop
 
 def parse_args():
     """
@@ -194,30 +194,6 @@ if __name__ == '__main__':
     predictor, cfg = get_predictor()
     predictor_crop, cfg_crop = get_predictor_crop()
 
-    # if args.pretrained:
-    #     network_data = torch.load(args.pretrained)
-    #     print("=> using pre-trained network '{}'".format(args.pretrained))
-    # else:
-    #     network_data = None
-    #     print("no pretrained network specified")
-    #     sys.exit()
-    #
-    # network = networks.__dict__[args.network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data).cuda(device=cfg.device)
-    # network = torch.nn.DataParallel(network, device_ids=[cfg.gpu_id]).cuda(device=cfg.device)
-    # cudnn.benchmark = True
-    # network.eval()
-    #
-    # if args.pretrained_crop:
-    #     network_data_crop = torch.load(args.pretrained_crop)
-    #     network_crop = networks.__dict__[args.network_name](num_classes, cfg.TRAIN.NUM_UNITS, network_data_crop).cuda(device=cfg.device)
-    #     network_crop = torch.nn.DataParallel(network_crop, device_ids=[cfg.gpu_id]).cuda(device=cfg.device)
-    #     network_crop.eval()
-    # else:
-    #     network_crop = None
-
-    # if True: #cfg.TEST.VISUALIZE:
-    #     index_images = np.random.permutation(len(images_color))
-    # else:
     index_images = range(len(images_color))
 
     for i in index_images:

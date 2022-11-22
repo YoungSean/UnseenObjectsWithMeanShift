@@ -355,10 +355,6 @@ class TableTopDataset(data.Dataset, datasets.imdb):
             #print(boxes)
             im, foreground_labels, xyz_img = self.pad_crop_resize(im, foreground_labels, xyz_img)
             foreground_labels = self.process_label(foreground_labels)
-            # cv2.imshow("image", im)
-            # cv2.waitKey(0)
-            # cv2.imshow("label", foreground_labels*30)
-            # cv2.waitKey(0)
             boxes, binary_masks, labels = self.process_label_to_annos(foreground_labels)
 
         # sample labels
@@ -376,7 +372,6 @@ class TableTopDataset(data.Dataset, datasets.imdb):
         record["file_name"] = filename
         record["image_id"] = idx
 
-        # record["depth"] = torch.as_tensor(np.ascontiguousarray(xyz_img.transpose(2, 0, 1)))
         #torch.permute(torch.from_numpy(xyz_img), (2,0,1))
         objs = []
         # get annotations
@@ -405,15 +400,6 @@ class TableTopDataset(data.Dataset, datasets.imdb):
             record['depth'] = depth_blob
         # record["image"] = torch.permute(torch.from_numpy(im), (2, 0, 1))
 
-        # if not objs:
-        #     record["instances"] = None
-        # else:
-        #     if self.data_mapper:
-        #         image_shape = im.shape[:2]
-        #         instances = utils.annotations_to_instances(
-        #             objs, image_shape, mask_format="bitmask"
-        #         )
-        #         record["instances"] = utils.filter_empty_instances(instances)
         return record
 
     def __len__(self):

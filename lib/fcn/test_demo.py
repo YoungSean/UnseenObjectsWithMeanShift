@@ -21,7 +21,7 @@ import warnings
 import torch
 from config import cfg
 warnings.simplefilter("ignore", UserWarning)
-from topk_test_utils import test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD
+from test_utils import test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD
 
 
 
@@ -30,18 +30,15 @@ def get_predictor(input_image="RGBD_ADD"):
     cfg = get_cfg()
     add_deeplab_config(cfg)
     add_meanshiftformer_config(cfg)
-    #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/MSMFormer/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
     cfg_file = "../../MSMFormer/configs/tabletop_pretrained.yaml"
     cfg.merge_from_file(cfg_file)
     add_tabletop_config(cfg)
     cfg.SOLVER.IMS_PER_BATCH = 1 #
-    # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/MSMFormer/output_RGB/model_0004999.pth"
     cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
     cfg.INPUT.INPUT_IMAGE = input_image
     # arguments frequently tuned
     cfg.TEST.DETECTIONS_PER_IMAGE = 20
     weight_path = "../../MSMFormer/server_model/norm_model_0069999.pth"
-    #cfg.device = "cuda:0"
     cfg.MODEL.WEIGHTS = weight_path
     predictor = Network_RGBD(cfg)
     return predictor, cfg
@@ -51,14 +48,10 @@ def get_predictor_crop(input_image="RGBD_ADD"):
     cfg = get_cfg()
     add_deeplab_config(cfg)
     add_meanshiftformer_config(cfg)
-    #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/MSMFormer/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
-    #cfg_file = "../../MSMFormer/configs/crop_tabletop_pretrained.yaml"
     cfg_file = "../../MSMFormer/configs/crop_tabletop_pretrained.yaml"
     cfg.merge_from_file(cfg_file)
     add_tabletop_config(cfg)
     cfg.SOLVER.IMS_PER_BATCH = 1 #
-    # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/MSMFormer/output_RGB/model_0004999.pth"
-    #cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
     cfg.INPUT.INPUT_IMAGE = input_image
     # arguments frequently tuned
     cfg.TEST.DETECTIONS_PER_IMAGE = 20

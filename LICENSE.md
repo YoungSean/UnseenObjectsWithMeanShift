@@ -1,14 +1,10 @@
-# NVIDIA Source Code License for Unseen Object Clustering: Learning RGB-D Feature Embeddings for Unseen Object Instance Segmentation
-
+# Source Code License for MSMFormer
 ## 1. Definitions
 
 “Licensor” means any person or entity that distributes its Work.
 
 “Software” means the original work of authorship made available under this License.
 “Work” means the Software and any additions to or derivative works of the Software that are made available under this License.
-
-“Nvidia Processors” means any central processing unit (CPU), graphics processing unit (GPU), field-programmable gate array (FPGA), application-specific integrated circuit (ASIC) or any combination thereof designed, made, sold, or provided by Nvidia or its affiliates.
-
 The terms “reproduce,” “reproduction,” “derivative works,” and “distribution” have the meaning as provided under U.S. copyright law; provided, however, that for the purposes of this License, derivative works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work.
 
 Works, including the Software, are “made available” under this License by including in or with the Work either (a) a copyright notice referencing the applicability of this License to the Work, or (b) a copy of this License.

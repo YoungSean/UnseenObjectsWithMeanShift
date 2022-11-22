@@ -7,7 +7,7 @@ from meanshiftformer.config import add_meanshiftformer_config
 from detectron2.config import get_cfg
 from tabletop_config import add_tabletop_config
 from detectron2.projects.deeplab import add_deeplab_config
-from .topk_test_utils import Predictor_RGBD, get_confident_instances, combine_masks
+from .test_utils import Predictor_RGBD, get_confident_instances, combine_masks
 
 import argparse
 import pprint
@@ -91,45 +91,6 @@ def get_backbone_crop():
 
     return network_crop
 
-def get_crop_sample_and_features(image, depth, label, topk=True, confident_score=0.9, low_threshold=0.4):
-    predictor, _ = get_predictor()
-    network_crop = get_backbone_crop()
-    sample = {}
-    sample["image"] = image
-    sample["depth"] = depth
-    sample["label"] = label
-
-    outputs = predictor(sample)
-    confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
-                                                  num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
-                                                  low_threshold=low_threshold)
-    binary_mask = combine_masks(confident_instances)
-
-
-    out_label = torch.as_tensor(binary_mask).unsqueeze(dim=0).cuda()
-
-    if len(depth.shape) == 3:
-        depth = torch.unsqueeze(depth, dim=0)
-    if len(image.shape) == 3:
-        image = torch.unsqueeze(image, dim=0)
-    if depth is not None:
-        # filter labels on zero depth
-        out_label = filter_labels_depth(out_label, depth, 0.8)
-
-    # zoom in refinement
-    out_label_refined = None
-    if network_crop is not None:
-        rgb_crop, out_label_crop, rois, depth_crop = crop_rois(image, out_label.clone(), depth)
-        if rgb_crop.shape[0] > 0:
-            features_crop = network_crop(rgb_crop, out_label_crop, depth_crop)
-            labels_crop, selected_pixels_crop = clustering_features(features_crop, num_seeds=num_of_ms_seed)
-            # result_crop = cluster_crop(rgb_crop, depth_crop, features_crop)
-            # confident_instances_crop = get_confident_instances(result_crop, topk=topk, score=confident_score,
-            #                                               num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
-            #                                               low_threshold=low_threshold)
-            # binary_mask_crop = combine_masks(confident_instances_crop)
-            # labels_crop = torch.as_tensor(binary_mask_crop).unsqueeze(dim=0).cuda()
-            out_label_refined, labels_crop = match_label_crop(out_label, labels_crop.cuda(), out_label_crop, rois, depth_crop)
 # save data
 def save_data(file_rgb, out_label_refined, roi, features_crop):
 
