@@ -36,7 +36,13 @@ If you find Mean Shift Mask Transformer useful in your research, please consider
 }
 ```
 
-### Training and testing on the Tabletop Object Dataset (TOD)
+### Install
+
+
+
+Some code is from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering) and [Mask2Former](https://github.com/facebookresearch/Mask2Former).
+
+### Training on the Tabletop Object Dataset (TOD)
 1. Download the Tabletop Object Dataset (TOD) from [here](https://drive.google.com/uc?export=download&id=1Du309Ye8J7v2c4fFGuyPGjf-C3-623vw) (34G).
 
 2. Create a symlink for the TOD dataset
@@ -47,9 +53,10 @@ If you find Mean Shift Mask Transformer useful in your research, please consider
 
 3. Training and testing on the TOD dataset
     ```Shell
-    cd $ROOT
+    cd $ROOT/MSMFormer
 
-    # multi-gpu training, we used 4 GPUs, to do
+    # multi-gpu training, we used 4 GPUs
+   python tabletop_train_net_pretrained.py --num-gpus 4
 
     ```
 
@@ -67,5 +74,10 @@ If you find Mean Shift Mask Transformer useful in your research, please consider
     cd $ROOT/data
     ln -s $OSD_dataset OSD
     ```
-
+3. Test
+    ```Shell
+    cd $ROOT/lib/fcn
+    python test_demo.py
+    ```
+   Or you can directly run $ROOT/lib/fcn/test_demo.py with IDE like PyCharm.
 

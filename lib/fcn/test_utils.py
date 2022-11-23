@@ -54,7 +54,7 @@ from matplotlib import pyplot as plt
 
 # Reference: https://www.reddit.com/r/computervision/comments/jb6b18/get_binary_mask_image_from_detectron2/
 
-def get_confident_instances(outputs, topk=True, score=0.9, num_class=2, low_threshold=0.4):
+def get_confident_instances(outputs, topk=False, score=0.7, num_class=2, low_threshold=0.4):
     """
     Extract objects with high prediction scores.
     """
@@ -145,7 +145,7 @@ class Network_RGBD(DefaultPredictor):
             # Apply pre-processing to image.
             predictions = self.model([sample])[0]
             return predictions
-def test_sample(cfg, sample, predictor, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4):
+def test_sample(cfg, sample, predictor, visualization = False, topk=False, confident_score=0.9, low_threshold=0.4):
     im = cv2.imread(sample["file_name"])
     print(sample["file_name"])
     if "label" in sample.keys():
@@ -185,7 +185,7 @@ def test_sample(cfg, sample, predictor, visualization = False, topk=True, confid
     # print(f"metrics2: ", metrics2g)
     return metrics
 
-def get_result_from_network(cfg, image, depth, label, predictor, topk=True, confident_score=0.9, low_threshold=0.4, vis_crop=False):
+def get_result_from_network(cfg, image, depth, label, predictor, topk=False, confident_score=0.7, low_threshold=0.4, vis_crop=False):
     height = image.shape[-2]  # image: 3XHXW, tensor
     width = image.shape[-1]
     image = torch.squeeze(image, dim=0)
@@ -211,16 +211,14 @@ def get_result_from_network(cfg, image, depth, label, predictor, topk=True, conf
         v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.0)
         out = v.draw_instance_predictions(confident_instances.to("cpu"))
         visual_result = out.get_image()[:, :, ::-1]
-        # cv2.imwrite(sample["file_name"][-6:-3]+"pred.png", visual_result)
         cv2.imshow("image_segmentation", visual_result)
         cv2.waitKey(0)
-        # cv2.waitKey(100000)
         cv2.destroyAllWindows()
     binary_mask = combine_masks(confident_instances)
     return binary_mask
 
-def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4, print_result=False):
-    #cluster_crop = Predictor_RGBD_CROP(cfg)
+
+def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = False, topk=False, confident_score=0.7, low_threshold=0.4, print_result=False):
     # First network: the image needs the original one.
     image = sample['image_color'].cuda() # for future crop
     sample["image"] = image
@@ -268,8 +266,6 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
         else:
             out_label = filter_labels_depth(out_label, depth, 0.5)
 
-
-
     # zoom in refinement
     out_label_refined = None
     if predictor_crop is not None:
@@ -282,10 +278,10 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
                 labels_crop[i] = torch.from_numpy(binary_mask_crop)
             out_label_refined, labels_crop = match_label_crop(out_label, labels_crop.cuda(), out_label_crop, rois, depth_crop)
 
-    if visualization and rgb_crop.shape[0] > 0:
-        bbox = None
-        _vis_minibatch_segmentation_final(image, depth, label, out_label, out_label_refined, None,
-            selected_pixels=None, bbox=bbox)
+        if visualization and rgb_crop.shape[0] > 0:
+            bbox = None
+            _vis_minibatch_segmentation_final(image, depth, label, out_label, out_label_refined, None,
+                selected_pixels=None, bbox=bbox)
 
     if out_label_refined is not None:
         out_label_refined = out_label_refined.squeeze(dim=0).cpu().numpy()
@@ -301,7 +297,7 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
 
     return metrics, metrics_refined
 
-def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualization = False, topk=True, confident_score=0.9, low_threshold=0.4, print_result=False):
+def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualization = False, topk=False, confident_score=0.7, low_threshold=0.4, print_result=False):
     image = sample['image_color'].cuda() # for future crop
     sample["image"] = image
     if len(image.shape) == 4:
@@ -367,7 +363,7 @@ def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualizati
     else:
         prediction_refined = prediction.copy()
 
-def test_dataset(cfg,dataset, predictor, visualization=False, topk=True, confident_score=0.9, low_threshold=0.4):
+def test_dataset(cfg,dataset, predictor, visualization=False, topk=False, confident_score=0.7, low_threshold=0.4):
     metrics_all = []
     for i in trange(len(dataset)):
         metrics = test_sample(cfg, dataset[i], predictor, visualization=visualization,
@@ -416,9 +412,6 @@ def test_dataset_crop(cfg,dataset, predictor, network_crop, visualization=False,
                               topk=topk, confident_score=confident_score, low_threshold=low_threshold)
         metrics_all.append(metrics)
         metrics_all_refined.append(metrics_refined)
-    # for i in tqdm(dataset):
-    #     metrics = test_sample(i, predictor, visualization=visualization)
-    #     metrics_all.append(metrics)
     print('========================================================')
     if not topk:
         print("Mask threshold: ", confident_score)

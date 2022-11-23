@@ -24,48 +24,35 @@ warnings.simplefilter("ignore", UserWarning)
 from test_utils import test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD
 
 
+cfg_file_MSMFormer = "../../MSMFormer/configs/tabletop_pretrained.yaml"
+weight_path_MSMFormer = "../../MSMFormer/server_model/norm_model_0069999.pth"
 
-def get_predictor(input_image="RGBD_ADD"):
-# build model
+cfg_file_MSMFormer_crop = "../../MSMFormer/configs/crop_tabletop_pretrained.yaml"
+weight_path_MSMFormer_crop = "../../MSMFormer/server_model/crop_dec9_model_final.pth"
+
+def get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD"):
     cfg = get_cfg()
     add_deeplab_config(cfg)
     add_meanshiftformer_config(cfg)
-    cfg_file = "../../MSMFormer/configs/tabletop_pretrained.yaml"
+    cfg_file = cfg_file
     cfg.merge_from_file(cfg_file)
     add_tabletop_config(cfg)
-    cfg.SOLVER.IMS_PER_BATCH = 1 #
-    cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
+    cfg.SOLVER.IMS_PER_BATCH = 1  #
+
     cfg.INPUT.INPUT_IMAGE = input_image
     # arguments frequently tuned
     cfg.TEST.DETECTIONS_PER_IMAGE = 20
-    weight_path = "../../MSMFormer/server_model/norm_model_0069999.pth"
+    weight_path = weight_path
     cfg.MODEL.WEIGHTS = weight_path
     predictor = Network_RGBD(cfg)
     return predictor, cfg
+def get_predictor(cfg_file=cfg_file_MSMFormer, weight_path=weight_path_MSMFormer, input_image="RGBD_ADD"):
+    return get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD")
 
-def get_predictor_crop(input_image="RGBD_ADD"):
-# build model
-    cfg = get_cfg()
-    add_deeplab_config(cfg)
-    add_meanshiftformer_config(cfg)
-    cfg_file = "../../MSMFormer/configs/crop_tabletop_pretrained.yaml"
-    cfg.merge_from_file(cfg_file)
-    add_tabletop_config(cfg)
-    cfg.SOLVER.IMS_PER_BATCH = 1 #
-    cfg.INPUT.INPUT_IMAGE = input_image
-    # arguments frequently tuned
-    cfg.TEST.DETECTIONS_PER_IMAGE = 20
-    weight_path = "../../MSMFormer/server_model/crop_dec9_model_final.pth"
-    #cfg.device = "cuda:0"
-    cfg.MODEL.WEIGHTS = weight_path
-    predictor = Network_RGBD(cfg)
-    return predictor, cfg
+def get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop, weight_path=weight_path_MSMFormer_crop, input_image="RGBD_ADD"):
+    return get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD")
 
-predictor, cfg = get_predictor()
-predictor_crop, cfg_crop = get_predictor_crop()
-
-# cfg.INPUT.INPUT_IMAGE = 'RGBD_ADD' #"RGBD_ADD" #'DEPTH'
-
+# set datasets
 #dataset = TableTopDataset(data_mapper=True,eval=True)
 ocid_dataset = OCIDDataset(image_set="test")
 osd_dataset = OSDObject(image_set="test")
@@ -79,25 +66,23 @@ for d in ["train", "test"]:
 
 metadata = MetadataCatalog.get("tabletop_object_train")
 
-metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
-test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+if __name__ == "__main__":
+    predictor, cfg = get_predictor()
+    predictor_crop, cfg_crop = get_predictor_crop()
+    # Example of predicting and visualizing samples from OCID and OSD dataset
+    metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+    test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
 
-# met_all = []l
-# met_refined_all= []
-# for i in range(400, 490, 8):
-#     print(i)
-#     metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
-#     #metrics= test_sample(cfg, ocid_dataset[i], predictor, visualization=True, topk=True, confident_score=0.9)
-#     met_all.append(metrics["Boundary F-measure"])
-#     met_refined_all.append(metrics_refined["Boundary F-measure"])
-# #
-# print("Boundary F-measure", np.mean(np.array(met_all)))
-# print("Refined Boundary F-measure", np.mean(np.array(met_refined_all)))
+    # Uncomment to predict a series of samples
+    # met_all = []
+    # met_refined_all= []
+    # for i in range(400, 490, 8):
+    #     print(i)
+    #     metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+    #     met_all.append(metrics["Boundary F-measure"])
+    #     met_refined_all.append(metrics_refined["Boundary F-measure"])
+    # print("Boundary F-measure", np.mean(np.array(met_all)))
+    # print("Refined Boundary F-measure", np.mean(np.array(met_refined_all)))
 
-# OCID dataset
-#test_dataset(cfg, ocid_dataset, predictor, visualization=False)
-#test_dataset(cfg, ocid_dataset, predictor, visualization=True, topk=False, confident_score=0.9)
-# test_dataset_crop(cfg, ocid_dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9, num_of_ms_seed=5)
-#test_dataset_crop(cfg, dataset, predictor, network_crop, visualization=False, topk=False, confident_score=0.9)
-
-# test_dataset_crop(cfg, osd_dataset, predictor, predictor_crop, visualization=False, topk=False, confident_score=0.7)
+    # Uncomment to predict the whole dataset (OSD/OCID)
+    # test_dataset_crop(cfg, osd_dataset, predictor, predictor_crop, visualization=False, topk=False, confident_score=0.7)
