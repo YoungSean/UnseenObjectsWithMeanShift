@@ -9,3 +9,10 @@ future
 scipy
 open3d
 imageio
+cython
+scipy
+shapely
+timm
+h5py
+submitit
+scikit-image

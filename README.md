@@ -35,12 +35,27 @@ If you find Mean Shift Mask Transformer useful in your research, please consider
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 ```
+### Required Environment
+- Ubuntu 16.04 or above
+- PyTorch 0.4.1 or above
+- CUDA 9.1 or above
 
 ### Install
+The code is based on [Detetron2 framework](https://detectron2.readthedocs.io/en/latest/tutorials/getting_started.html).
+1. Install PyTorch
+2. Install [Detetron2](https://detectron2.readthedocs.io/en/latest/tutorials/install.html)
+3. Install other packages
 
+For example, in a anaconda environment:
+```Shell
+pip install torch==1.10.0+cu111 torchvision==0.11.0+cu111 torchaudio==0.10.0 -f https://download.pytorch.org/whl/torch_stable.html
+pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.10/index.html
+pip install -r /path/to/requirements.txt
+```
+Some code is from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering) and [Mask2Former](https://github.com/facebookresearch/Mask2Former). 
+The main folder is **$ROOT/MSMFormer/meanshiftformer**. The Python classes begin with "pretrained" is used for Unseen Object Instance Segmentation.
+The Hypersphere Attention is in [this file](https://github.com/YoungSean/UnseenObjectsWithMeanShift/blob/master/MSMFormer/meanshiftformer/modeling/transformer_decoder/attention_util.py).
 
-
-Some code is from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering) and [Mask2Former](https://github.com/facebookresearch/Mask2Former).
 
 ### Training on the Tabletop Object Dataset (TOD)
 1. Download the Tabletop Object Dataset (TOD) from [here](https://drive.google.com/uc?export=download&id=1Du309Ye8J7v2c4fFGuyPGjf-C3-623vw) (34G).
@@ -80,4 +95,7 @@ Some code is from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering) and [
     python test_demo.py
     ```
    Or you can directly run $ROOT/lib/fcn/test_demo.py with IDE like PyCharm.
+4. Demo images in $ROOT/data/demo
+   For some real world images from the lab, an example python script is $ROOT/tools/test_image_with_ms_transformer.py.
+
 

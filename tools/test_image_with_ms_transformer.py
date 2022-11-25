@@ -201,15 +201,8 @@ if __name__ == '__main__':
             print(images_color[i])
             # read sample
             sample = read_sample(images_color[i], images_depth[i], camera_params)
-            # print(sample["image_color"].shape)
-            # run network
-            # out_label, out_label_refined = test_sample(sample, network, network_crop)
             test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualization=True, topk=False,
                              confident_score=0.6, print_result=True)
-            # cv2.imshow("image", out_label_refined.squeeze().numpy())
-            # cv2.waitKey(0)
-            # # cv2.waitKey(100000)
-            # cv2.destroyAllWindows()
-            # print(out_label.shape)
+
         else:
             print('files not exist %s' % (images_color[i]))
