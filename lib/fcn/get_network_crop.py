@@ -29,31 +29,9 @@ from utils import mask as util_
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-def get_predictor(input_image="RGBD_ADD"):
-# build model
-    cfg = get_cfg()
-    add_deeplab_config(cfg)
-    add_meanshiftformer_config(cfg)
-    #cfg_file = "/home/xy/yxl/UnseenObjectClusteringYXL/MSMFormer/configs/coco/instance-segmentation/maskformer2_R50_bs16_50ep.yaml"
-    cfg_file = "../../MSMFormer/configs/coco_ms/instance-segmentation/tabeltop_pretrained.yaml"
-    cfg.merge_from_file(cfg_file)
-    add_tabletop_config(cfg)
-    cfg.SOLVER.IMS_PER_BATCH = 1 #
-    # cfg.MODEL.WEIGHTS = "/home/xy/yxl/UnseenObjectClusteringYXL/MSMFormer/output_RGB/model_0004999.pth"
-    cfg.MODEL.MASK_FORMER.DEC_LAYERS = 7
-    cfg.INPUT.INPUT_IMAGE = input_image
-    # arguments frequently tuned
-    cfg.TEST.DETECTIONS_PER_IMAGE = 20
-    weight_path = "../../MSMFormer/output_0923_kappa30/model_0139999.pth"
-    #cfg.device = "cuda:0"
-    cfg.MODEL.WEIGHTS = weight_path
-    predictor = Predictor_RGBD(cfg)
-    return predictor, cfg
-
 def get_backbone():
     num_classes = 2
-    pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
-    # pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
+    pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"  # the pretrained checkpoint from UCN
     network_name = "seg_resnet34_8s_embedding"
     if pretrained:
         network_data = torch.load(pretrained)
@@ -74,7 +52,7 @@ def get_backbone():
 
 def get_backbone_crop():
     num_classes = 2
-    pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
+    pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth" # the pretrained checkpoint from UCN
     network_name = "seg_resnet34_8s_embedding"
 
     if pretrained_crop:
