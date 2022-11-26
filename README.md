@@ -43,14 +43,14 @@ The code is based on [Detetron2 framework](https://detectron2.readthedocs.io/en/
 2. Install [Detetron2](https://detectron2.readthedocs.io/en/latest/tutorials/install.html)
 3. Install other packages
 
-For example, in a anaconda environment:
+For example, in an anaconda environment:
 ```Shell
 pip install torch==1.10.0+cu111 torchvision==0.11.0+cu111 torchaudio==0.10.0 -f https://download.pytorch.org/whl/torch_stable.html
 pip install detectron2 -f https://dl.fbaipublicfiles.com/detectron2/wheels/cu111/torch1.10/index.html
-pip install -r /path/to/requirements.txt
+pip install -r /path/to/requirement.txt
 ```
 Some code is from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering) and [Mask2Former](https://github.com/facebookresearch/Mask2Former). 
-The main folder is **$ROOT/MSMFormer/meanshiftformer**. The Python classes begin with "pretrained" is used for Unseen Object Instance Segmentation.
+The main folder is **$ROOT/MSMFormer/meanshiftformer**. The Python classes begin with "pretrained" are used for Unseen Object Instance Segmentation.
 The Hypersphere Attention is in [this file](https://github.com/YoungSean/UnseenObjectsWithMeanShift/blob/master/MSMFormer/meanshiftformer/modeling/transformer_decoder/attention_util.py).
 
 ### Download
