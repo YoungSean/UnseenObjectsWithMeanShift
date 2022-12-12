@@ -54,9 +54,10 @@ The main folder is **$ROOT/MSMFormer/meanshiftformer**. The Python classes begin
 The Hypersphere Attention is in [this file](https://github.com/YoungSean/UnseenObjectsWithMeanShift/blob/master/MSMFormer/meanshiftformer/modeling/transformer_decoder/attention_util.py).
 
 ### Download
+- Create a folder $ROOT/data/checkpoints
 - Download the pretrained backbone checkpoints from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering). They are *seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth* and *seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth*. 
-Then replace the file paths in this [script](https://github.com/YoungSean/UnseenObjectsWithMeanShift/blob/bbc0f52d8723caa2a168790dcc793dd2cc933f36/lib/fcn/get_network_crop.py).
-- Download our trained checkpoints from [here](https://drive.google.com/drive/folders/1lmmTLqlNlN4AjwzWT7lmPrMygQNS7FmR?usp=sharing).
+Then move the checkpoint files into $ROOT/data/checkpoints. You can check the file paths in this [script](https://github.com/YoungSean/UnseenObjectsWithMeanShift/blob/bbc0f52d8723caa2a168790dcc793dd2cc933f36/lib/fcn/get_network_crop.py).
+- Download our trained checkpoints from [here](https://drive.google.com/drive/folders/1lmmTLqlNlN4AjwzWT7lmPrMygQNS7FmR?usp=sharing). Then move the checkpoint files into $ROOT/data/checkpoints. 
 
 ### Training on the Tabletop Object Dataset (TOD)
 1. Download the Tabletop Object Dataset (TOD) from [here](https://drive.google.com/uc?export=download&id=1Du309Ye8J7v2c4fFGuyPGjf-C3-623vw) (34G).

@@ -28,10 +28,16 @@ from utils import mask as util_
 
 sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
-def get_backbone():
+dirname = os.path.dirname(__file__)
+
+pretrained_path = os.path.join(dirname, "../../data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth")#"/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
+pretrained_crop_path = os.path.join(dirname, "../../data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth") # the pretrained checkpoint from UCN
+
+def get_backbone(pretrained_file=pretrained_path):
     num_classes = 2
-    pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"  # the pretrained checkpoint from UCN
+    pretrained = pretrained_file #"/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"  # the pretrained checkpoint from UCN
     network_name = "seg_resnet34_8s_embedding"
     if pretrained:
         network_data = torch.load(pretrained)
@@ -50,9 +56,10 @@ def get_backbone():
 
     return network
 
-def get_backbone_crop():
+def get_backbone_crop(pretrained_crop_file=pretrained_crop_path):
     num_classes = 2
-    pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth" # the pretrained checkpoint from UCN
+    pretrained_crop = pretrained_crop_file
+    #"/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth" # the pretrained checkpoint from UCN
     network_name = "seg_resnet34_8s_embedding"
 
     if pretrained_crop:
