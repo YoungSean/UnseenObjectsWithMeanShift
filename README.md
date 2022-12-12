@@ -99,6 +99,8 @@ Then move the checkpoint files into $ROOT/data/checkpoints. You can check the fi
    Or you can directly run $ROOT/lib/fcn/test_demo.py with IDE like PyCharm.
 4. Demo images in $ROOT/data/demo
    For some real world images from the lab, an example python script is $ROOT/tools/test_image_with_ms_transformer.py.
+
+   In terminal, run the following command:
    ```shell
    ./tools/test_image_with_ms_transformer.py  \
    --imgdir data/demo   \
