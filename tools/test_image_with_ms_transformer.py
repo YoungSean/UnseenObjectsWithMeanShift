@@ -29,7 +29,9 @@ from utils.blob import pad_im
 from utils import mask as util_
 from fcn.test_utils import test_sample_crop_nolabel
 from fcn.test_demo import get_predictor, get_predictor_crop
+import os
 
+dirname = os.path.dirname(__file__)
 def parse_args():
     """
     Parse input arguments
@@ -39,12 +41,18 @@ def parse_args():
                         default=0, type=int)
     parser.add_argument('--pretrained', dest='pretrained',
                         help='initialize with pretrained checkpoint',
-                        default=None, type=str)
+                        default=os.path.join(dirname, '../data/checkpoints/norm_model_0069999.pth'), type=str)
     parser.add_argument('--pretrained_crop', dest='pretrained_crop',
                         help='initialize with pretrained checkpoint for crops',
-                        default=None, type=str)
+                        default=os.path.join(dirname, '../data/checkpoints/crop_dec9_model_final.pth'), type=str)
     parser.add_argument('--cfg', dest='cfg_file',
                         help='optional config file', default="experiments/cfgs/seg_resnet34_8s_embedding_cosine_rgbd_add_tabletop.yml", type=str)
+    parser.add_argument('--network_cfg', dest='network_cfg_file',
+                        help='config file for first stage network',
+                        default=os.path.join(dirname, '../MSMFormer/configs/tabletop_pretrained.yaml'), type=str)
+    parser.add_argument('--network_crop_cfg', dest='network_crop_cfg_file',
+                        help='config file  for second stage network',
+                        default=os.path.join(dirname, "../MSMFormer/configs/crop_tabletop_pretrained.yaml"), type=str)
     parser.add_argument('--dataset', dest='dataset_name',
                         help='dataset to train on',
                         default='shapenet_scene_train', type=str)
@@ -191,8 +199,8 @@ if __name__ == '__main__':
         camera_params = None
 
     # prepare network
-    predictor, cfg = get_predictor()
-    predictor_crop, cfg_crop = get_predictor_crop()
+    predictor, cfg = get_predictor(cfg_file=args.network_cfg_file, weight_path=args.pretrained)
+    predictor_crop, cfg_crop = get_predictor_crop(cfg_file=args.network_crop_cfg_file, weight_path=args.pretrained_crop)
 
     index_images = range(len(images_color))
 

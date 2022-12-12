@@ -99,5 +99,25 @@ Then move the checkpoint files into $ROOT/data/checkpoints. You can check the fi
    Or you can directly run $ROOT/lib/fcn/test_demo.py with IDE like PyCharm.
 4. Demo images in $ROOT/data/demo
    For some real world images from the lab, an example python script is $ROOT/tools/test_image_with_ms_transformer.py.
-
+   ```shell
+   ./tools/test_image_with_ms_transformer.py  \
+   --imgdir data/demo   \
+   --color *-color.png   \
+   --depth *-depth.png \
+   --pretrained path/to/first/stage/network/checkpoint \
+   --pretrained_crop path/to/second/stage/network/checkpoint \
+   --network_cfg path/to/first/stage/network/config/file \
+   --network_crop_cfg path/to/second/stage/network/config/file
+   ```
+   An example is shown as follows:
+      ```shell
+   ./tools/test_image_with_ms_transformer.py  \
+   --imgdir data/demo   \
+   --color *-color.png   \
+   --depth *-depth.png \
+   --pretrained data/checkpoints/norm_model_0069999.pth \
+   --pretrained_crop data/checkpoints/crop_dec9_model_final.pth \
+   --network_cfg MSMFormer/configs/tabletop_pretrained.yaml \
+   --network_crop_cfg MSMFormer/configs/crop_tabletop_pretrained.yaml
+   ```
 
