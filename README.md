@@ -111,8 +111,9 @@ Then move the checkpoint files into $ROOT/data/checkpoints. You can check the fi
    --network_cfg path/to/first/stage/network/config/file \
    --network_crop_cfg path/to/second/stage/network/config/file
    ```
+   
    An example is shown as follows:
-      ```shell
+   ```shell
    ./tools/test_image_with_ms_transformer.py  \
    --imgdir data/demo   \
    --color *-color.png   \
