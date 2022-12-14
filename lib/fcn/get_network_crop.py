@@ -32,8 +32,22 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 dirname = os.path.dirname(__file__)
 
-pretrained_path = os.path.join(dirname, "../../data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth")#"/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
-pretrained_crop_path = os.path.join(dirname, "../../data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth") # the pretrained checkpoint from UCN
+input_type = cfg.INPUT
+if input_type == 'RGBD':
+    pretrained_path = os.path.join(dirname,
+                                   "../../data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth")#"/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
+    pretrained_crop_path = os.path.join(dirname,
+                                    "../../data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth") # the pretrained checkpoint from UCN
+elif input_type == 'COLOR':
+    pretrained_path = os.path.join(dirname, "../../data/checkpoints/seg_resnet34_8s_embedding_cosine_color_sampling_epoch_16.checkpoint.pth")
+    pretrained_crop_path = os.path.join(dirname, "../../data/checkpoints/seg_resnet34_8s_embedding_cosine_color_crop_sampling_epoch_16.checkpoint.pth")
+else:
+    # by default, we use RGBD add checkpoints.
+    pretrained_path = os.path.join(dirname,
+                                   "../../data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth")  # "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
+    pretrained_crop_path = os.path.join(dirname,
+                                        "../../data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth")  # the pretrained checkpoint from UCN
+
 
 def get_backbone(pretrained_file=pretrained_path):
     num_classes = 2

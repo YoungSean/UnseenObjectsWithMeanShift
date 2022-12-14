@@ -83,7 +83,10 @@ class UnseenInstanceDatasetMapper:
 
         dataset_dict = copy.deepcopy(dataset_dict)  # it will be modified by code below
         image = dataset_dict["image_color"]
-        depth = dataset_dict["depth"]
+        if "depth" in dataset_dict.keys():
+            depth = dataset_dict["depth"]
+        else:
+            depth = None
 
         label = dataset_dict["label"]
         #orig_label = orig_label.squeeze().numpy()
@@ -150,7 +153,8 @@ class UnseenInstanceDatasetMapper:
             ]
             # pad image
             image = F.pad(image, padding_size, value=128).contiguous()
-            depth = F.pad(depth, padding_size, value=128).contiguous()
+            if depth:
+                depth = F.pad(depth, padding_size, value=128).contiguous()
             # pad label
             label = F.pad(label, padding_size, value=128).contiguous()
             # pad mask

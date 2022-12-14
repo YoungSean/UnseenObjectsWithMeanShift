@@ -44,6 +44,8 @@ def add_meanshiftformer_config(cfg):
     cfg.MODEL.EMBEDDING.LAMBDA_INTER = 1.0
     cfg.MODEL.EMBEDDING.METRIC = "cosine" # 'euclidean'
     cfg.MODEL.EMBEDDING.NORMALIZE = False
+    # USE DEPTH OR NOT
+    cfg.MODEL.USE_DEPTH = False
 
     # transformer config
     cfg.MODEL.MASK_FORMER.NHEADS = 8 #1 # We do not need multihead in mean shift attention
