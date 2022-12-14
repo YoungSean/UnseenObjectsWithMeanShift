@@ -25,6 +25,7 @@ warnings.simplefilter("ignore", UserWarning)
 import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
+from nms import nms
 
 
 # Reference: https://www.reddit.com/r/computervision/comments/jb6b18/get_binary_mask_image_from_detectron2/
@@ -45,6 +46,46 @@ def get_confident_instances(outputs, topk=False, score=0.7, num_class=2, low_thr
             return instances
     confident_instances = instances[instances.scores > score]
     return confident_instances
+
+def combine_masks_with_NMS(instances):
+    """
+    Combine several bit masks [N, H, W] into a mask [H,W],
+    e.g. 8*480*640 tensor becomes a numpy array of 480*640.
+    [[1,0,0], [0,1,0]] = > [2,3,0]. We assign labels from 2 since 1 stands for table.
+    """
+    mask = instances.get('pred_masks').to('cpu').numpy()
+    scores = instances.get('scores').to('cpu').numpy()
+
+    # non-maximum suppression
+    keep = nms(mask, scores, thresh=0.7).astype(int)
+    mask = mask[keep]
+    scores = scores[keep]
+
+    num, h, w = mask.shape
+    bin_mask = np.zeros((h, w))
+    score_mask = np.zeros((h, w))
+    num_instance = len(mask)
+    bbox = np.zeros((num_instance, 5), dtype=np.float32)
+
+    # if there is not any instance, just return a mask full of 0s.
+    if num_instance == 0:
+        return bin_mask, score_mask, bbox
+
+    for m, object_label in zip(mask, range(2, 2 + num_instance)):
+        label_pos = np.nonzero(m)
+        bin_mask[label_pos] = object_label
+        score_mask[label_pos] = int(scores[object_label - 2] * 100)
+
+        # bounding box
+        y1 = np.min(label_pos[0])
+        y2 = np.max(label_pos[0])
+        x1 = np.min(label_pos[1])
+        x2 = np.max(label_pos[1])
+        bbox[object_label - 2, :] = [x1, y1, x2, y2, scores[object_label - 2]]
+
+    # filename = './bin_masks/001.png'
+    # cv2.imwrite(filename, score_mask)
+    return bin_mask, score_mask, bbox
 
 def combine_masks(instances):
     """
