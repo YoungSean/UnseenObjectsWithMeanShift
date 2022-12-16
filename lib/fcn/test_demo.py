@@ -26,10 +26,10 @@ from test_utils import test_dataset, test_sample, test_sample_crop, test_dataset
 dirname = os.path.dirname(__file__)
 
 cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/tabletop_pretrained.yaml')
-weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/RGB_norm_model_0069999.pth")  # norm_model_0069999.pth
+weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")  # norm_model_0069999.pth
 
 cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
-weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/RGB_crop_model_final.pth") # "../../MSMFormer/server_model/crop_dec9_model_final.pth" # crop_dec9_model_final.pth
+weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth") # "../../MSMFormer/server_model/crop_dec9_model_final.pth" # crop_dec9_model_final.pth
 
 def get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD"):
     cfg = get_cfg()
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     # met_refined_all= []
     # for i in range(400, 490, 8):
     #     print(i)
-    #     metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True) 0
+    #     metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, predictor_crop, visualization=False, topk=False, confident_score=0.9, print_result=True)
     #     met_all.append(metrics["Boundary F-measure"])
     #     met_refined_all.append(metrics_refined["Boundary F-measure"])
     # print("Boundary F-measure", np.mean(np.array(met_all)))
@@ -97,3 +97,4 @@ if __name__ == "__main__":
 
     # Uncomment to predict the whole dataset (OSD/OCID)
     # test_dataset_crop(cfg, osd_dataset, predictor, predictor_crop, visualization=False, topk=False, confident_score=0.7)
+    # test_dataset_crop(cfg, ocid_dataset, predictor, predictor_crop, visualization=False, topk=False, confident_score=0.7)
