@@ -85,7 +85,7 @@ def combine_masks_with_NMS(instances):
 
     # filename = './bin_masks/001.png'
     # cv2.imwrite(filename, score_mask)
-    return bin_mask, score_mask, bbox
+    return bin_mask #, score_mask, bbox
 
 def combine_masks(instances):
     """
