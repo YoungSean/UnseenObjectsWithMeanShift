@@ -26,10 +26,10 @@ from test_utils import test_dataset, test_sample, test_sample_crop, test_dataset
 dirname = os.path.dirname(__file__)
 
 cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/tabletop_pretrained.yaml')
-weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")
+weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/RGB_norm_model_0069999.pth")  # norm_model_0069999.pth
 
 cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
-weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth") # "../../MSMFormer/server_model/crop_dec9_model_final.pth"
+weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/RGB_crop_model_final.pth") # "../../MSMFormer/server_model/crop_dec9_model_final.pth" # crop_dec9_model_final.pth
 
 def get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD"):
     cfg = get_cfg()

@@ -200,7 +200,8 @@ def get_result_from_network(cfg, image, depth, label, predictor, topk=False, con
     height = image.shape[-2]  # image: 3XHXW, tensor
     width = image.shape[-1]
     image = torch.squeeze(image, dim=0)
-    depth = torch.squeeze(depth, dim=0)
+    if depth is not None:
+        depth = torch.squeeze(depth, dim=0)
 
     sample = {"image": image, "height": height, "width": width, "depth": depth}
     outputs = predictor(sample)
@@ -243,7 +244,10 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
 
     if gt is not None:
         label = torch.from_numpy(gt).unsqueeze(dim=0).cuda()
-    depth = sample['depth'].cuda()
+    if cfg.MODEL.USE_DEPTH:
+        depth = sample['depth'].cuda()
+    else:
+        depth = None
 
     outputs = predictor(sample)
     confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
@@ -266,8 +270,10 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
         cv2.destroyAllWindows()
 
     out_label = torch.as_tensor(binary_mask).unsqueeze(dim=0).cuda()
-    if len(depth.shape) == 3:
-        depth = torch.unsqueeze(depth, dim=0)
+    if depth is not None:
+        if len(depth.shape) == 3:
+            depth = torch.unsqueeze(depth, dim=0)
+
     if len(image.shape) == 3:
         image = torch.unsqueeze(image, dim=0)
     if depth is not None:
@@ -284,7 +290,13 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
         if rgb_crop.shape[0] > 0:
             labels_crop = torch.zeros((rgb_crop.shape[0], rgb_crop.shape[-2], rgb_crop.shape[-1]))#.cuda()
             for i in range(rgb_crop.shape[0]):
-                binary_mask_crop = get_result_from_network(cfg, rgb_crop[i], depth_crop[i], out_label_crop[i], predictor_crop,
+                if depth_crop is None:
+                    binary_mask_crop = get_result_from_network(cfg, rgb_crop[i], None, out_label_crop[i],
+                                                               predictor_crop,
+                                                               topk=topk, confident_score=confident_score,
+                                                               low_threshold=low_threshold)
+                else:
+                    binary_mask_crop = get_result_from_network(cfg, rgb_crop[i], depth_crop[i], out_label_crop[i], predictor_crop,
                                                        topk=topk, confident_score=confident_score, low_threshold=low_threshold)
                 labels_crop[i] = torch.from_numpy(binary_mask_crop)
             out_label_refined, labels_crop = match_label_crop(out_label, labels_crop.cuda(), out_label_crop, rois, depth_crop)
@@ -317,7 +329,10 @@ def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualizati
     sample["height"] = image.shape[-2] # image: 3XHXW, tensor
     sample["width"] = image.shape[-1]
 
-    depth = sample['depth'].cuda()
+    if cfg.MODEL.USE_DEPTH:
+        depth = sample['depth'].cuda()
+    else:
+        depth = None
     if len(depth.shape) == 4:
         depth = torch.squeeze(depth, dim=0)
 
