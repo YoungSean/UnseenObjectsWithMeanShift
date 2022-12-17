@@ -269,14 +269,13 @@ def setup(args):
     #add_tabletop_config(cfg)
     # cfg.merge_from_file(args.config_file)
     # cfg.merge_from_list(args.opts)
-    cfg.OUTPUT_DIR = "./output_1213_normal"
-    #cfg.MODEL.WEIGHTS = ""
-    cfg.SOLVER.MAX_ITER = 20
+    # cfg.OUTPUT_DIR = "./output_1213_normal"
+    # cfg.MODEL.WEIGHTS = ""
+    # cfg.SOLVER.MAX_ITER = 20
     # cfg.SOLVER.CHECKPOINT_PERIOD = 1000
     cfg.freeze()
     default_setup(cfg, args)
     # Setup logger for "mask_former" module
-    # setup_logger(output=cfg.OUTPUT_DIR, distributed_rank=comm.get_rank(), name="mask2former")
     setup_logger(output=cfg.OUTPUT_DIR, distributed_rank=comm.get_rank(), name="msmformer")
     return cfg
 
