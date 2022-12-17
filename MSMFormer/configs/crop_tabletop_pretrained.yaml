@@ -1,5 +1,5 @@
 _BASE_: tabletop_pretrained.yaml
-OUTPUT_DIR: "./output_1003_pretrained_std255"
+OUTPUT_DIR: "./output_crop"
 INPUT:
   MASK_FORMAT: "bitmask"
   IMAGE_SIZE: 224
@@ -10,11 +10,11 @@ INPUT:
   MIN_SIZE_TEST: 0
   DATASET_MAPPER_NAME: "unseen_instance"
 SOLVER:
-  IMS_PER_BATCH: 1
+  IMS_PER_BATCH: 4 # set batch size is 4
   BASE_LR: 0.0001
   #STEPS: (327778, 355092)
-  MAX_ITER: 2100
-  CHECKPOINT_PERIOD: 1000
+  MAX_ITER: 71000  # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
+  CHECKPOINT_PERIOD: 17500 # save a checkpoint every 1/4 epoch
 MODEL:
   USE_DEPTH: True #False
   MASK_ON: True
