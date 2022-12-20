@@ -21,15 +21,15 @@ import warnings
 import torch
 from config import cfg
 warnings.simplefilter("ignore", UserWarning)
-from test_utils import test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD
+from test_utils import test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD, test_sample_crop_nolabel
 
 dirname = os.path.dirname(__file__)
-
+# ./output_1218_demo_many2one/model_final.pth
 cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/tabletop_pretrained.yaml')
-weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")  # norm_model_0069999.pth
+weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/RGB_norm_model_0069999.pth")  # norm_model_0069999.pth # ./output_1218_demo_many2one/model_final.pth  #../../data/checkpoints/norm_model_0069999.pth
 
 cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
-weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth") # "../../MSMFormer/server_model/crop_dec9_model_final.pth" # crop_dec9_model_final.pth
+weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/RGB_crop_model_final.pth") # "../../MSMFormer/server_model/crop_dec9_model_final.pth" # crop_dec9_model_final.pth
 
 def get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD"):
     cfg = get_cfg()
@@ -41,6 +41,10 @@ def get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD"):
     cfg.SOLVER.IMS_PER_BATCH = 1  #
 
     cfg.INPUT.INPUT_IMAGE = input_image
+    if input_image == "RGBD_ADD":
+        cfg.MODEL.USE_DEPTH = True
+    else:
+        cfg.MODEL.USE_DEPTH = False
     # arguments frequently tuned
     cfg.TEST.DETECTIONS_PER_IMAGE = 20
     weight_path = weight_path
@@ -54,7 +58,7 @@ def get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop, weight_path=weight_path
     return get_general_predictor(cfg_file, weight_path, input_image=input_image)
 
 # set datasets
-#dataset = TableTopDataset(data_mapper=True,eval=True)
+dataset = TableTopDataset(data_mapper=True,eval=True)
 ocid_dataset = OCIDDataset(image_set="test")
 osd_dataset = OSDObject(image_set="test")
 
@@ -81,15 +85,20 @@ if __name__ == "__main__":
     predictor_crop, cfg_crop = get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop,
                                                   weight_path=weight_path_MSMFormer_crop)
     # Example of predicting and visualizing samples from OCID and OSD dataset
-    metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
-    test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+    # metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+    # test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+    test_sample_crop(cfg, dataset[5], predictor, predictor_crop, visualization=True, topk=False,
+                     confident_score=0.9, print_result=True)
+
+    test_sample_crop_nolabel(cfg, dataset[5], predictor, predictor_crop, visualization=True, topk=False,
+                     confident_score=0.7)
 
     # Uncomment to predict a series of samples
     # met_all = []
     # met_refined_all= []
-    # for i in range(400, 490, 8):
+    # for i in range(len(dataset)):
     #     print(i)
-    #     metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, predictor_crop, visualization=False, topk=False, confident_score=0.9, print_result=True)
+    #     metrics, metrics_refined = test_sample_crop(cfg, dataset[i], predictor, predictor_crop, visualization=False, topk=False, confident_score=0.7)
     #     met_all.append(metrics["Boundary F-measure"])
     #     met_refined_all.append(metrics_refined["Boundary F-measure"])
     # print("Boundary F-measure", np.mean(np.array(met_all)))

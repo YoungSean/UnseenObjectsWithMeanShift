@@ -73,6 +73,8 @@ def parse_args():
                         default=None, type=str)
     parser.add_argument('--image_path', dest='image_path',
                         help='path to images', default=None, type=str)
+    parser.add_argument('--input_image', dest='input_image',
+                        help='the type of image', default="RGBD_ADD", type=str)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -199,8 +201,8 @@ if __name__ == '__main__':
         camera_params = None
 
     # prepare network
-    predictor, cfg = get_predictor(cfg_file=args.network_cfg_file, weight_path=args.pretrained)
-    predictor_crop, cfg_crop = get_predictor_crop(cfg_file=args.network_crop_cfg_file, weight_path=args.pretrained_crop)
+    predictor, cfg = get_predictor(cfg_file=args.network_cfg_file, weight_path=args.pretrained, input_image=args.input_image)
+    predictor_crop, cfg_crop = get_predictor_crop(cfg_file=args.network_crop_cfg_file, weight_path=args.pretrained_crop, input_image=args.input_image)
 
     index_images = range(len(images_color))
 
@@ -210,7 +212,7 @@ if __name__ == '__main__':
             # read sample
             sample = read_sample(images_color[i], images_depth[i], camera_params)
             test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualization=True, topk=False,
-                             confident_score=0.6, print_result=True)
+                             confident_score=0.6)
 
         else:
             print('files not exist %s' % (images_color[i]))
