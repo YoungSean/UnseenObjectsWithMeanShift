@@ -122,3 +122,21 @@ Then move the checkpoint files into $ROOT/data/checkpoints.
    --network_crop_cfg MSMFormer/configs/crop_tabletop_pretrained.yaml
    ```
 
+### Running with ROS on a real camera for real-world unseen object instance segmentation
+
+- Make sure our pretrained checkpoints are downloaded.
+
+    ```Shell
+    # start realsense if you use a realsense camera
+    roslaunch realsense2_camera rs_aligned_depth.launch tf_prefix:=measured/camera
+
+    # start rviz
+    rosrun rviz rviz -d ./ros/segmentation.rviz
+
+    # run segmentation on a realsense camera, $GPU_ID can be 0, 1, etc.
+    ./experiments/scripts/ros_seg_transformer_test_segmentation_realsense.sh $GPU_ID
+    
+    # run segmentation on a Fetch camera, $GPU_ID can be 0, 1, etc.
+    ./experiments/scripts/ros_seg_transformer_test_segmentation_fetch.sh $GPU_ID
+    
+    ```
