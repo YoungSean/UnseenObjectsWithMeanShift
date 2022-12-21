@@ -260,15 +260,13 @@ def setup(args):
     Create configs and perform basic setups.
     """
     cfg = get_cfg()
-    # for poly lr schedule
     add_deeplab_config(cfg)
-    #add_maskformer2_config(cfg)
     add_meanshiftformer_config(cfg)
     cfg_file = "configs/tabletop_pretrained.yaml"
     cfg.merge_from_file(cfg_file)
-    #add_tabletop_config(cfg)
     # cfg.merge_from_file(args.config_file)
     # cfg.merge_from_list(args.opts)
+    # some configs for demo training
     # cfg.OUTPUT_DIR = "./output_1213_normal"
     # cfg.MODEL.WEIGHTS = ""
     # cfg.SOLVER.MAX_ITER = 20
@@ -303,9 +301,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-    # set for import
-
-    #sys.path.append('/home/xy/yxl/UnseenObjectClusteringYXL')
 
     args = default_argument_parser().parse_args()
     print("Command Line Args:", args)

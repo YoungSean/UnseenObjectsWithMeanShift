@@ -26,10 +26,10 @@ from test_utils import test_dataset, test_sample, test_sample_crop, test_dataset
 dirname = os.path.dirname(__file__)
 # ./output_1218_demo_many2one/model_final.pth
 cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/tabletop_pretrained.yaml')
-weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/RGB_norm_model_0069999.pth")  # norm_model_0069999.pth # ./output_1218_demo_many2one/model_final.pth  #../../data/checkpoints/norm_model_0069999.pth
+weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")
 
 cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
-weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/RGB_crop_model_final.pth") # "../../MSMFormer/server_model/crop_dec9_model_final.pth" # crop_dec9_model_final.pth
+weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
 
 def get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD"):
     cfg = get_cfg()
@@ -58,9 +58,6 @@ def get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop, weight_path=weight_path
     return get_general_predictor(cfg_file, weight_path, input_image=input_image)
 
 # set datasets
-dataset = TableTopDataset(data_mapper=True,eval=True)
-ocid_dataset = OCIDDataset(image_set="test")
-osd_dataset = OSDObject(image_set="test")
 
 use_my_dataset = True
 for d in ["train", "test"]:
@@ -79,6 +76,9 @@ if __name__ == "__main__":
     # weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")
     # cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
     # weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
+    # dataset = TableTopDataset(data_mapper=True, eval=True)
+    ocid_dataset = OCIDDataset(image_set="test")
+    osd_dataset = OSDObject(image_set="test")
 
     predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
                                    weight_path=weight_path_MSMFormer)
@@ -86,12 +86,8 @@ if __name__ == "__main__":
                                                   weight_path=weight_path_MSMFormer_crop)
     # Example of predicting and visualizing samples from OCID and OSD dataset
     # metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
-    # test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
-    test_sample_crop(cfg, dataset[5], predictor, predictor_crop, visualization=True, topk=False,
-                     confident_score=0.9, print_result=True)
+    test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
 
-    test_sample_crop_nolabel(cfg, dataset[5], predictor, predictor_crop, visualization=True, topk=False,
-                     confident_score=0.7)
 
     # Uncomment to predict a series of samples
     # met_all = []

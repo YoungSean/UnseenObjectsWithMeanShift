@@ -28,14 +28,14 @@ cfg = __C
 
 __C.device = 'cuda:0'
 __C.FLIP_X = False
-__C.INPUT = 'COLOR' #'COLOR' #'RGBD'
+__C.INPUT = 'RGBD' #'COLOR' or 'RGBD'
 __C.NETWORK = 'VGG16'
 __C.RIG = ''
 __C.CAD = ''
 __C.POSE = ''
 __C.BACKGROUND = ''
 __C.USE_GPU_NMS = True
-__C.MODE = 'TEST'#'TRAIN'
+__C.MODE = 'TRAIN'
 __C.INTRINSICS = ()
 __C.DATA_PATH = ''
 
