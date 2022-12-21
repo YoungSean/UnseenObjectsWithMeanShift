@@ -46,7 +46,7 @@ def parse_args():
                         help='initialize with pretrained checkpoint for crops',
                         default=os.path.join(dirname, '../data/checkpoints/crop_dec9_model_final.pth'), type=str)
     parser.add_argument('--cfg', dest='cfg_file',
-                        help='optional config file', default="experiments/cfgs/seg_resnet34_8s_embedding_cosine_rgbd_add_tabletop.yml", type=str)
+                        help='optional config file', type=str)
     parser.add_argument('--network_cfg', dest='network_cfg_file',
                         help='config file for first stage network',
                         default=os.path.join(dirname, '../MSMFormer/configs/tabletop_pretrained.yaml'), type=str)
