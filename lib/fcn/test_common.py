@@ -121,7 +121,7 @@ def _vis_minibatch_segmentation_final(image, depth, label, out_label=None, out_l
         out_label_refined_blob = out_label_refined.cpu().numpy()
 
     m = 2
-    n = 3
+    n = 2
     for i in range(num):
         # image
         im = im_blob[i, :3, :, :].copy()

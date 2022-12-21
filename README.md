@@ -3,10 +3,10 @@
 ### Introduction
 Segmenting unseen objects is a critical task in many different domains. For example, a robot may need to grasp an unseen object, which means it needs to visually separate this object from the background and/or other objects. Mean shift clustering is a common method in object segmentation tasks. However, the traditional mean shift clustering algorithm is not easily integrated into an end-to-end neural network training pipeline. In this work, we propose the Mean Shift Mask Transformer (MSMFormer), a new transformer architecture that simulates the von Mises-Fisher (vMF) mean shift clustering algorithm, allowing for the joint training and inference of both the feature extractor and the clustering. Its central component is a hypersphere attention mechanism, which updates object queries on a hypersphere. To illustrate the effectiveness of our method, we apply MSMFormer to Unseen Object Instance Segmentation, which yields a new state-of-the-art of 87.3 Boundary F-measure on the real-world Object Clutter Indoor Dataset (OCID).
 [arXiv](https://arxiv.org/abs/2211.11679)
-<p align="center"><img src="./data/pics/overview.png" width="850" height="524"/></p>
+<p align="center"><img src="./data/pics/overview.png" width="797" height="523"/></p>
 
 ### Mean Shift Mask Transformer Architecture
-<p align="center"><img src="./data/pics/model.png" width="850" height="463"/></p>
+<p align="center"><img src="./data/pics/model.png" width="624" height="340"/></p>
 
 
 ### Citation
