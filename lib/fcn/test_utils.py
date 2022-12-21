@@ -69,7 +69,7 @@ def combine_masks_with_NMS(instances):
 
     # if there is not any instance, just return a mask full of 0s.
     if num_instance == 0:
-        return bin_mask, score_mask, bbox
+        return bin_mask #, score_mask, bbox
 
     for m, object_label in zip(mask, range(2, 2 + num_instance)):
         label_pos = np.nonzero(m)
@@ -177,8 +177,8 @@ def test_sample(cfg, sample, predictor, visualization = False, topk=False, confi
     confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
                                                   num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
                                                   low_threshold=low_threshold)
-    binary_mask = combine_masks(confident_instances)
-
+    # binary_mask = combine_masks(confident_instances)
+    binary_mask = combine_masks_with_NMS(confident_instances)
     metrics = multilabel_metrics(binary_mask, gt)
     print(f"metrics: ", metrics)
     ## Visualize the result
@@ -226,7 +226,7 @@ def get_result_from_network(cfg, image, depth, label, predictor, topk=False, con
         cv2.imshow("image_segmentation", visual_result)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-    binary_mask = combine_masks(confident_instances)
+    binary_mask = combine_masks_with_NMS(confident_instances)
     return binary_mask
 
 
@@ -253,7 +253,7 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
     confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
                                                   num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
                                                   low_threshold=low_threshold)
-    binary_mask = combine_masks(confident_instances)
+    binary_mask = combine_masks_with_NMS(confident_instances)
     metrics = multilabel_metrics(binary_mask, gt)
     if print_result:
         print("file name: ", sample["file_name"])
@@ -331,16 +331,17 @@ def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualizati
 
     if cfg.MODEL.USE_DEPTH:
         depth = sample['depth'].cuda()
+        if len(depth.shape) == 4:
+            depth = torch.squeeze(depth, dim=0)
     else:
         depth = None
-    if len(depth.shape) == 4:
-        depth = torch.squeeze(depth, dim=0)
+        sample['depth'] = None
 
     outputs = predictor(sample)
     confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
                                                   num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
                                                   low_threshold=low_threshold)
-    binary_mask = combine_masks(confident_instances)
+    binary_mask = combine_masks_with_NMS(confident_instances)
 
     if visualization:
         im = cv2.imread(sample["file_name"])  # this is for visualization
@@ -353,8 +354,9 @@ def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualizati
         cv2.destroyAllWindows()
 
     out_label = torch.as_tensor(binary_mask).unsqueeze(dim=0).cuda()
-    if len(depth.shape) == 3:
-        depth = torch.unsqueeze(depth, dim=0)
+    if depth is not None:
+        if len(depth.shape) == 3:
+            depth = torch.unsqueeze(depth, dim=0)
     if len(image.shape) == 3:
         image = torch.unsqueeze(image, dim=0)
     if depth is not None:
@@ -371,8 +373,14 @@ def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualizati
         if rgb_crop.shape[0] > 0:
             labels_crop = torch.zeros((rgb_crop.shape[0], rgb_crop.shape[-2], rgb_crop.shape[-1]))#.cuda()
             for i in range(rgb_crop.shape[0]):
-                binary_mask_crop = get_result_from_network(cfg, rgb_crop[i], depth_crop[i], out_label_crop[i], predictor_crop,
-                                                       topk=topk, confident_score=confident_score, low_threshold=low_threshold)
+                if depth is not None:
+                    binary_mask_crop = get_result_from_network(cfg, rgb_crop[i], depth_crop[i], out_label_crop[i], predictor_crop,
+                                                           topk=topk, confident_score=confident_score, low_threshold=low_threshold)
+                else:
+                    binary_mask_crop = get_result_from_network(cfg, rgb_crop[i], None, out_label_crop[i],
+                                                               predictor_crop,
+                                                               topk=topk, confident_score=confident_score,
+                                                               low_threshold=low_threshold)
                 labels_crop[i] = torch.from_numpy(binary_mask_crop)
             out_label_refined, labels_crop = match_label_crop(out_label, labels_crop.cuda(), out_label_crop, rois, depth_crop)
 

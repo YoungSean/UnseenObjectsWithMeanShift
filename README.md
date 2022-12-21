@@ -16,19 +16,12 @@ If you find Mean Shift Mask Transformer useful in your research, please consider
 ```
 @misc{https://doi.org/10.48550/arxiv.2211.11679,
   doi = {10.48550/ARXIV.2211.11679},
-  
   url = {https://arxiv.org/abs/2211.11679},
-  
   author = {Lu, Yangxiao and Chen, Yuqiao and Ruozzi, Nicholas and Xiang, Yu},
-  
   keywords = {Computer Vision and Pattern Recognition (cs.CV), Artificial Intelligence (cs.AI), Machine Learning (cs.LG), Robotics (cs.RO), FOS: Computer and information sciences, FOS: Computer and information sciences},
-  
   title = {Mean Shift Mask Transformer for Unseen Object Instance Segmentation},
-  
   publisher = {arXiv},
-  
   year = {2022},
-  
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 ```

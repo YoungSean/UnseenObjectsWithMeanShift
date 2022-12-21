@@ -16,7 +16,7 @@ SOLVER:
   MAX_ITER: 71000  # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
   CHECKPOINT_PERIOD: 17500 # save a checkpoint every 1/4 epoch
 MODEL:
-  USE_DEPTH: True #False
+  USE_DEPTH: False #False
   MASK_ON: True
   PIXEL_MEAN: [102.9801, 115.9465, 122.7717]
   META_ARCHITECTURE: "PretrainedMeanShiftMaskFormer"

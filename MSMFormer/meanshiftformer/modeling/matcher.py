@@ -5,6 +5,7 @@ Modules to compute the matching cost and solve the corresponding LSAP.
 """
 import torch
 import torch.nn.functional as F
+import numpy as np
 from scipy.optimize import linear_sum_assignment
 from torch import nn
 from torch.cuda.amp import autocast
@@ -147,8 +148,27 @@ class HungarianMatcher(nn.Module):
                 + self.cost_dice * cost_dice
             )
             C = C.reshape(num_queries, -1).cpu()
-
-            indices.append(linear_sum_assignment(C))
+            
+            # many-to-one assignment
+            num_targets = C.shape[1]
+            factor = int(num_queries / num_targets)
+            pos = np.arange(num_targets)
+            C_new = np.repeat(C, factor, axis=1)
+            pos_new = np.repeat(pos, factor)
+            
+            # add remaining columns
+            remainder = num_queries - factor * num_targets
+            if remainder > 0:
+                ind = np.random.permutation(num_targets)[:remainder]
+                C_new = np.concatenate((C_new, C[:, ind]), axis=1)
+                pos_new = np.concatenate((pos_new, ind))
+            
+            # compute assignments
+            index0, index1 = linear_sum_assignment(C_new)
+            index1 = pos_new[index1]
+            indices.append((index0, index1))
+            
+            # indices.append(linear_sum_assignment(C))
 
         return [
             (torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64))
