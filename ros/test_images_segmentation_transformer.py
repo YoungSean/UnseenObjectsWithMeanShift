@@ -212,8 +212,8 @@ class ImageListener:
             y1 = int(bbox[i, 1])
             x2 = int(bbox[i, 2])
             y2 = int(bbox[i, 3])
-            cv2.rectangle(im_label, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(im_label, "%.2f" % bbox[i, 4], (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 0, 0), 4)
+            # cv2.rectangle(im_label, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(im_label, "%.2f" % bbox[i, 4], (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
         rgb_msg = self.cv_bridge.cv2_to_imgmsg(im_label, 'rgb8')
         rgb_msg.header.stamp = rgb_frame_stamp
         rgb_msg.header.frame_id = rgb_frame_id
@@ -288,7 +288,10 @@ def parse_args():
     parser.add_argument('--input_image', dest='input_image',
                         help='the type of image', default="RGBD_ADD", type=str)
     parser.add_argument('--camera', dest='camera',
-                        help='the type of image', default="Realsense", type=str)                        
+                        help='the type of image', default="Realsense", type=str)
+    parser.add_argument('--no_refinement', dest='no_refinement',
+                        help='do not use refinement',
+                        action='store_true')                                                
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -324,7 +327,11 @@ if __name__ == '__main__':
 
     # prepare network
     predictor, cfg_transformer = get_predictor(cfg_file=args.network_cfg_file, weight_path=args.pretrained, input_image=args.input_image)
-    predictor_crop, cfg_transformer_crop = get_predictor_crop(cfg_file=args.network_crop_cfg_file, weight_path=args.pretrained_crop, input_image=args.input_image)
+    if args.no_refinement:
+        predictor_crop = None
+        cfg_transformer_crop = None
+    else:
+        predictor_crop, cfg_transformer_crop = get_predictor_crop(cfg_file=args.network_crop_cfg_file, weight_path=args.pretrained_crop, input_image=args.input_image)
 
     # image listener
     listener = ImageListener(predictor, predictor_crop, cfg_transformer, cfg_transformer_crop)

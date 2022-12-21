@@ -15,4 +15,5 @@ outdir="data/checkpoints"
 --network_cfg MSMFormer/configs/tabletop_pretrained.yaml \
 --network_crop_cfg MSMFormer/configs/crop_tabletop_pretrained.yaml \
 --input_image RGBD_ADD \
---camera Realsense
+--camera Realsense \
+--no_refinement     # comment this out if you want to use labe refinement

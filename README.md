@@ -140,3 +140,6 @@ Then move the checkpoint files into $ROOT/data/checkpoints.
     ./experiments/scripts/ros_seg_transformer_test_segmentation_fetch.sh $GPU_ID
     
     ```
+    
+Our example running on a Fetch robot:
+<p align="center"><img src="./data/pics/msmformer.gif"/></p>    
