@@ -93,6 +93,8 @@ Then move the checkpoint files into $ROOT/data/checkpoints.
 
 ### Demo
 1. For Demo images in $ROOT/data/demo, you can run $ROOT/experiments/scripts/demo_msmformer_rgbd.sh to see the visual results. (* demo_msmformer_rgb.sh is only using RGB information.)
+<p align="center"><img src="./data/pics/Figure_2.png" width="640" height="480"/> <img src="./data/pics/Figure_7.png" width="640" height="480"/></p>
+
 
 2. An example python script is $ROOT/tools/test_image_with_ms_transformer.py.
 
