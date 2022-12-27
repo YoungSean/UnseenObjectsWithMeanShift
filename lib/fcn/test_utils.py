@@ -162,7 +162,7 @@ class Network_RGBD(DefaultPredictor):
             return predictions
             
             
-def test_sample(cfg, sample, predictor, visualization = False, topk=False, confident_score=0.9, low_threshold=0.4):
+def test_sample(cfg, sample, predictor, visualization=False, topk=False, confident_score=0.9, low_threshold=0.4):
     im = cv2.imread(sample["file_name"])
     print(sample["file_name"])
     if "label" in sample.keys():

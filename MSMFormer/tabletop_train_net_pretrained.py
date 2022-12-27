@@ -269,7 +269,7 @@ def setup(args):
     # some configs for demo training
     cfg.OUTPUT_DIR = "./output_1226_Res50"
     # cfg.MODEL.WEIGHTS = ""
-    cfg.SOLVER.MAX_ITER = 20
+    cfg.SOLVER.MAX_ITER = 2000
     # cfg.SOLVER.CHECKPOINT_PERIOD = 1000
     cfg.freeze()
     default_setup(cfg, args)
