@@ -83,7 +83,8 @@ class UnseenInstanceDatasetMapper:
 
         dataset_dict = copy.deepcopy(dataset_dict)  # it will be modified by code below
         image = dataset_dict["image_color"]
-        raw_image = utils.read_image(dataset_dict["file_name"], format=self.img_format)
+        # raw_image = utils.read_image(dataset_dict["file_name"], format=self.img_format)
+        # raw_image = torch.from_numpy(raw_image)
         if "depth" in dataset_dict.keys():
             depth = dataset_dict["depth"]
         else:
@@ -169,7 +170,7 @@ class UnseenInstanceDatasetMapper:
         dataset_dict["image"] = image
         dataset_dict["label"] = label.to(torch.float)
         dataset_dict["depth"] = depth
-        dataset_dict["raw_image"] = raw_image
+        # dataset_dict["raw_image"] = raw_image
 
         # Prepare per-category binary masks
         instances = Instances(image_shape)

@@ -394,6 +394,7 @@ class TableTopDataset(data.Dataset, datasets.imdb):
         record['image_color'] = image_blob
         record["height"] = image_blob.shape[-2]
         record["width"] = image_blob.shape[-1]
+        record['raw_image'] = torch.from_numpy(im).permute(2, 0, 1)
 
         if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
             depth_blob = torch.from_numpy(xyz_img).permute(2, 0, 1)

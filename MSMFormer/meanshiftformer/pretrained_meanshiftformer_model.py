@@ -285,7 +285,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
 
         if self.use_other_backbone:
             features = self.pretrained_backbone(images.tensor)
-            outputs = self.sem_seg_head(features)  # need a pixel decoder
+            outputs, last_feature_map = self.sem_seg_head(features, images.tensor.shape[-2], images.tensor.shape[-1])  # need a pixel decoder
         else:
             if self.use_depth:
                 if len(batched_inputs[0]["depth"].shape)==4:
