@@ -13,9 +13,9 @@ MODEL:
     OUT_FEATURES: ["res2", "res3", "res4", "res5"]
     # NORM: "SyncBN"
     RES5_MULTI_GRID: [1, 1, 1]  # not used
-DATASETS:
-  TRAIN: ("coco_2017_train",)
-  TEST: ("coco_2017_val",)
+#DATASETS:
+#  TRAIN: ("coco_2017_train",)
+#  TEST: ("coco_2017_val",)
 SOLVER:
   IMS_PER_BATCH: 16
   BASE_LR: 0.0001
@@ -39,8 +39,8 @@ INPUT:
   MAX_SCALE: 2.0
   FORMAT: "RGB"
   DATASET_MAPPER_NAME: "coco_instance_lsj"
-TEST:
-  EVAL_PERIOD: 5000
+#TEST:
+#  EVAL_PERIOD: 5000
 DATALOADER:
   FILTER_EMPTY_ANNOTATIONS: True
   NUM_WORKERS: 4

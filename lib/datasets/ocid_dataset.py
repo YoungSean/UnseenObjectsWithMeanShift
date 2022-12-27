@@ -104,7 +104,8 @@ class OCIDDataset(data.Dataset, datasets.imdb):
                   'image_color_bgr': im_tensor_bgr,
                   'label': label_blob,
                   'filename': filename[index+5:],
-                  'file_name': str(self.image_paths[idx])}
+                  'file_name': str(self.image_paths[idx]),
+                  'raw_image': torch.from_numpy(im).permute(2, 0, 1)}
 
         # Depth image
         #if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':

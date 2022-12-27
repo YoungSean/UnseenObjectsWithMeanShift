@@ -84,7 +84,8 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         normalize: bool,
         # choose backbone
         feature_crop: bool,
-        use_depth: bool
+        use_depth: bool,
+        use_other_backbone: bool
 
     ):
         """
@@ -112,6 +113,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
             test_topk_per_image: int, instance segmentation parameter, keep topk instances per image
         """
         super().__init__()
+        self.use_other_backbone = use_other_backbone
         # self.backbone = backbone
         self.sem_seg_head = sem_seg_head
         self.criterion = criterion
@@ -143,10 +145,15 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
             assert self.sem_seg_postprocess_before_inference
 
         self.feature_crop = feature_crop
-        if feature_crop:
-            self.pretrained_backbone = get_backbone_crop()
+        if self.use_other_backbone:
+            self.pretrained_backbone = backbone
+            for param in self.pretrained_backbone.parameters():
+                param.requires_grad = False
         else:
-            self.pretrained_backbone = get_backbone()
+            if feature_crop:
+                self.pretrained_backbone = get_backbone_crop()
+            else:
+                self.pretrained_backbone = get_backbone()
         self.pretrained_backbone.to(self.device)
         self.use_depth = use_depth
 
@@ -226,7 +233,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
             "normalize": cfg.MODEL.EMBEDDING.NORMALIZE,
             "feature_crop": cfg.MODEL.EMBEDDING.FEATURE_CROP,
             "use_depth": cfg.MODEL.USE_DEPTH,
-
+            "use_other_backbone": cfg.MODEL.USE_OTHER_BACKBONE,
         }
 
     @property
@@ -264,6 +271,11 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         else:
             images = [x["image"].to(self.device) for x in batched_inputs]
 
+        if self.use_other_backbone:
+            # restore the initial RGB values
+            images = [x["raw_image"].to(self.device) for x in batched_inputs]
+            # use coco mean for ResNet50
+            images = [(x - self.pixel_mean) / self.pixel_std for x in images]
         # disable the normalization, just use the image from data mapper
         # if not self.feature_crop:
         #     images = [(x - self.pixel_mean) / self.pixel_std for x in images]
@@ -271,30 +283,32 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         #images = torch.stack(images, dim=0)
         images = ImageList.from_tensors(images, self.size_divisibility)
 
-        if self.use_depth:
-            if len(batched_inputs[0]["depth"].shape)==4:
-                images_depth = batched_inputs[0]["depth"].to(self.device)
-            else:
-                images_depth = [x["depth"].to(self.device) for x in batched_inputs]
-                images_depth = ImageList.from_tensors(images_depth, self.size_divisibility)
-
-            if self.use_embedding_loss:
-                features = self.pretrained_backbone(images.tensor, None, images_depth.tensor)
-            else:
-                features = self.pretrained_backbone(images.tensor, None, images_depth.tensor).detach()
+        if self.use_other_backbone:
+            features = self.pretrained_backbone(images.tensor)
+            outputs = self.sem_seg_head(features)  # need a pixel decoder
         else:
-            if self.use_embedding_loss:
-                features = self.pretrained_backbone(images.tensor, None)
-            else:
-                features = self.pretrained_backbone(images.tensor, None).detach()
+            if self.use_depth:
+                if len(batched_inputs[0]["depth"].shape)==4:
+                    images_depth = batched_inputs[0]["depth"].to(self.device)
+                else:
+                    images_depth = [x["depth"].to(self.device) for x in batched_inputs]
+                    images_depth = ImageList.from_tensors(images_depth, self.size_divisibility)
 
-        norm_features = F.normalize(features, p=2, dim=1)
-        new_features = {}
-        new_features['res5'] = norm_features
-        # features['res4'] = norm_features
-        # features['res3'] = norm_features
-        outputs, last_feature_map = self.sem_seg_head(new_features, images.tensor.shape[-2], images.tensor.shape[-1])
-        # print(last_feature_map.shape)
+                if self.use_embedding_loss:
+                    features = self.pretrained_backbone(images.tensor, None, images_depth.tensor)
+                else:
+                    features = self.pretrained_backbone(images.tensor, None, images_depth.tensor).detach()
+            else:
+                if self.use_embedding_loss:
+                    features = self.pretrained_backbone(images.tensor, None)
+                else:
+                    features = self.pretrained_backbone(images.tensor, None).detach()
+            # directly use the feature map from UCN
+            norm_features = F.normalize(features, p=2, dim=1)
+            new_features = {}
+            new_features['res5'] = norm_features
+            outputs, last_feature_map = self.sem_seg_head(new_features, images.tensor.shape[-2], images.tensor.shape[-1])
+
 
         if self.training:
             # mask classification target
