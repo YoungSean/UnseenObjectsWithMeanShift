@@ -147,8 +147,8 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         self.feature_crop = feature_crop
         if self.use_other_backbone:
             self.pretrained_backbone = backbone
-            for param in self.pretrained_backbone.parameters():
-                param.requires_grad = False
+            # for param in self.pretrained_backbone.parameters():
+            #     param.requires_grad = False
         else:
             if feature_crop:
                 self.pretrained_backbone = get_backbone_crop()
