@@ -119,9 +119,9 @@ class PushingDataset(data.Dataset, datasets.imdb):
             self._pushing_object_path = data_path
         elif image_set == 'all':
             data_path = os.path.join(self._pushing_object_path, 'training_set')
-            scene_dirs_train = sorted(glob.glob(data_path + '/*'))
+            # scene_dirs_train = sorted(glob.glob(data_path + '/*'))
             data_path = os.path.join(self._pushing_object_path, 'test_set')
-            scene_dirs_test = sorted(glob.glob(data_path + '/*'))
+            # scene_dirs_test = sorted(glob.glob(data_path + '/*'))
             # self.data_path = scene_dirs_train + scene_dirs_test
             self._pushing_object_path = data_path
 
@@ -310,22 +310,9 @@ class PushingDataset(data.Dataset, datasets.imdb):
         # print("file name", filename)
         im = cv2.imread(filename)
 
-        im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-        # plt.imshow(im_rgb)
-        # plt.show()
-        im_tensor = im_transform(im_rgb)
-
-
-        if cfg.TRAIN.CHROMATIC and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
-            im = chromatic_transform(im)
-        if cfg.TRAIN.ADD_NOISE and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
-            im = add_noise(im)
-
-        image_blob = im_tensor
         # meta data
         meta_filename = filename.replace('color', 'meta').replace('jpg', 'mat')
         data = scipy.io.loadmat(meta_filename)
-
 
         # Label
         labels_filename = filename.replace('color', 'label-final').replace('jpg', 'png')
@@ -336,7 +323,7 @@ class PushingDataset(data.Dataset, datasets.imdb):
         foreground_labels = self.process_label(foreground_labels)
         # plt.imshow(foreground_labels * 50)
         # plt.show()
-        label_blob = torch.from_numpy(foreground_labels).unsqueeze(0)
+
 
         # boxes.shape: [num_instances x 4], binary_masks.shape: [num_instances x H x W], labels.shape: [num_instances]
 
@@ -371,13 +358,12 @@ class PushingDataset(data.Dataset, datasets.imdb):
         # sample labels
         if cfg.TRAIN.EMBEDDING_SAMPLING:
             foreground_labels = self.sample_pixels(foreground_labels, cfg.TRAIN.EMBEDDING_SAMPLING_NUM)
-
         if cfg.TRAIN.CHROMATIC and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
             im = chromatic_transform(im)
         if cfg.TRAIN.ADD_NOISE and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
             im = add_noise(im)
 
-        record= {}
+        record = {}
         # record["raw_image"] = im
         record["raw_depth"] = xyz_img
         record["file_name"] = filename
@@ -396,11 +382,15 @@ class PushingDataset(data.Dataset, datasets.imdb):
             objs.append(obj)
         record["annotations"] = objs
 
+        # obtain label tensor
+        label_blob = torch.from_numpy(foreground_labels).unsqueeze(0)
         record["label"] = label_blob
-
-        # im_tensor = torch.from_numpy(im) / 255.0
-        # im_tensor -= self._pixel_mean
-        # image_blob = im_tensor.permute(2, 0, 1)
+        # get RGB tensor
+        im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        # plt.imshow(im_rgb)
+        # plt.show()
+        im_tensor = im_transform(im_rgb)
+        image_blob = im_tensor
         record['image_color'] = image_blob
         record["height"] = image_blob.shape[-2]
         record["width"] = image_blob.shape[-1]
@@ -409,7 +399,7 @@ class PushingDataset(data.Dataset, datasets.imdb):
             depth_blob = torch.from_numpy(xyz_img).permute(2, 0, 1)
             record['depth'] = depth_blob
         # record["image"] = torch.permute(torch.from_numpy(im), (2, 0, 1))
-        print("label shape",label_blob.shape)
+        # print("label shape",label_blob.shape)
         return record
 
     def __len__(self):
