@@ -205,6 +205,7 @@ class PushingDataset(data.Dataset, datasets.imdb):
         for k in range(unique_nonnegative_indices.shape[0]):
             mapped_labels[foreground_labels == unique_nonnegative_indices[k]] = k
         foreground_labels = mapped_labels
+        # print("mapped labels", np.unique(mapped_labels))
         return foreground_labels
 
     def pad_crop_resize(self, img, label, depth):
@@ -306,21 +307,21 @@ class PushingDataset(data.Dataset, datasets.imdb):
     def __getitem__(self, idx):
         # BGR image
         filename = str(self.image_paths[idx])
+        # print("file name", filename)
         im = cv2.imread(filename)
 
         im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        # plt.imshow(im_rgb)
+        # plt.show()
         im_tensor = im_transform(im_rgb)
+
 
         if cfg.TRAIN.CHROMATIC and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
             im = chromatic_transform(im)
         if cfg.TRAIN.ADD_NOISE and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
             im = add_noise(im)
-        im_tensor = torch.from_numpy(im) / 255.0
-        im_tensor_bgr = im_tensor.clone()
-        im_tensor_bgr = im_tensor_bgr.permute(2, 0, 1)
 
-        im_tensor -= self._pixel_mean
-        image_blob = im_tensor.permute(2, 0, 1)
+        image_blob = im_tensor
         # meta data
         meta_filename = filename.replace('color', 'meta').replace('jpg', 'mat')
         data = scipy.io.loadmat(meta_filename)
@@ -328,12 +329,13 @@ class PushingDataset(data.Dataset, datasets.imdb):
 
         # Label
         labels_filename = filename.replace('color', 'label-final').replace('jpg', 'png')
-        # foreground_labels = util_.imread_indexed(labels_filename)
-        foreground_labels = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-        # mask table as background
-        foreground_labels[foreground_labels == 1] = 0
+        foreground_labels = cv2.imread(labels_filename, cv2.IMREAD_GRAYSCALE)
+        # unique_indices = np.unique(foreground_labels)
+        # print('unique masks', unique_indices)
         boxes, binary_masks, labels = self.process_label_to_annos(foreground_labels)
         foreground_labels = self.process_label(foreground_labels)
+        # plt.imshow(foreground_labels * 50)
+        # plt.show()
         label_blob = torch.from_numpy(foreground_labels).unsqueeze(0)
 
         # boxes.shape: [num_instances x 4], binary_masks.shape: [num_instances x H x W], labels.shape: [num_instances]
@@ -354,6 +356,8 @@ class PushingDataset(data.Dataset, datasets.imdb):
 
             depth_img /= factor_depth
             xyz_img = compute_xyz(depth_img, fx, fy, px, py, height, width)
+            # plt.imshow(xyz_img)
+            # plt.show()
         else:
             xyz_img = None
 
@@ -392,7 +396,6 @@ class PushingDataset(data.Dataset, datasets.imdb):
             objs.append(obj)
         record["annotations"] = objs
 
-        label_blob = torch.from_numpy(foreground_labels).unsqueeze(0)
         record["label"] = label_blob
 
         # im_tensor = torch.from_numpy(im) / 255.0
@@ -406,7 +409,7 @@ class PushingDataset(data.Dataset, datasets.imdb):
             depth_blob = torch.from_numpy(xyz_img).permute(2, 0, 1)
             record['depth'] = depth_blob
         # record["image"] = torch.permute(torch.from_numpy(im), (2, 0, 1))
-
+        print("label shape",label_blob.shape)
         return record
 
     def __len__(self):
