@@ -59,6 +59,7 @@ from meanshiftformer import (
     add_maskformer2_config,
 )
 from datasets.tabletop_dataset import TableTopDataset, getTabletopDataset
+from datasets.pushing_dataset import PushingDataset
 from tabletop_config import add_tabletop_config
 from meanshiftformer.config import add_meanshiftformer_config
 
@@ -252,7 +253,14 @@ for d in ["train", "test"]:
     else:
         DatasetCatalog.register("tabletop_object_" + d, lambda d=d: getTabletopDataset(d))
     MetadataCatalog.get("tabletop_object_" + d).set(thing_classes=['__background__', 'object'])
-metadata = MetadataCatalog.get("tabletop_object_train")
+#
+# metadata = MetadataCatalog.get("tabletop_object_train")
+
+for d in ["train", "test"]:
+    DatasetCatalog.register("pushing_object_" + d, lambda d=d: PushingDataset(d))
+    MetadataCatalog.get("pushing_object_" + d).set(thing_classes=['__background__', 'object'])
+
+# metadata = MetadataCatalog.get("pushing_object_train")
 
 
 def setup(args):
@@ -262,12 +270,12 @@ def setup(args):
     cfg = get_cfg()
     add_deeplab_config(cfg)
     add_meanshiftformer_config(cfg)
-    cfg_file = "configs/tabletop_pretrained_ResNet50.yaml"
+    cfg_file = "configs/pushing_ResNet50.yaml"
     cfg.merge_from_file(cfg_file)
     # cfg.merge_from_file(args.config_file)
     # cfg.merge_from_list(args.opts)
     # some configs for demo training
-    cfg.OUTPUT_DIR = "./output_1226_Res50"
+    cfg.OUTPUT_DIR = "./output_0102_Res50"
     # cfg.MODEL.WEIGHTS = ""
     cfg.SOLVER.MAX_ITER = 2000
     # cfg.SOLVER.CHECKPOINT_PERIOD = 1000

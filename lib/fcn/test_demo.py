@@ -15,6 +15,7 @@ from datasets.tabletop_dataset import TableTopDataset, getTabletopDataset
 from detectron2.projects.deeplab import add_deeplab_config
 from detectron2.config import get_cfg
 from tabletop_config import add_tabletop_config
+from datasets.pushing_dataset import PushingDataset
 
 # ignore some warnings
 import warnings
@@ -27,8 +28,10 @@ dirname = os.path.dirname(__file__)
 # ./output_1218_demo_many2one/model_final.pth
 # cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/tabletop_pretrained.yaml')
 # weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")
-cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/tabletop_pretrained_ResNet50.yaml')
-weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/output_1226_Res50/model_final.pth")
+# cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/tabletop_pretrained_ResNet50.yaml')
+# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/output_1226_Res50/model_final.pth")
+cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/pushing_ResNet50.yaml')
+weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/output_0102_Res50/model_final.pth")
 
 cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
 weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
@@ -61,14 +64,15 @@ def get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop, weight_path=weight_path
 
 # set datasets
 
-use_my_dataset = True
-for d in ["train", "test"]:
-    if use_my_dataset:
-        DatasetCatalog.register("tabletop_object_" + d, lambda d=d: TableTopDataset(d))
-    else:
-        DatasetCatalog.register("tabletop_object_" + d, lambda d=d: getTabletopDataset(d))
+# use_my_dataset = True
+# for d in ["train", "test"]:
+#     if use_my_dataset:
+#         DatasetCatalog.register("tabletop_object_" + d, lambda d=d: TableTopDataset(d))
+#     else:
+#         DatasetCatalog.register("tabletop_object_" + d, lambda d=d: getTabletopDataset(d))
 
 metadata = MetadataCatalog.get("tabletop_object_train")
+
 
 if __name__ == "__main__":
     # Here you can set the paths for networks
@@ -78,9 +82,10 @@ if __name__ == "__main__":
     # weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")
     # cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
     # weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
-    dataset = TableTopDataset(data_mapper=True, eval=True)
-    ocid_dataset = OCIDDataset(image_set="test")
-    osd_dataset = OSDObject(image_set="test")
+    # dataset = TableTopDataset(data_mapper=True, eval=True)
+    # ocid_dataset = OCIDDataset(image_set="test")
+    # osd_dataset = OSDObject(image_set="test")
+    pushing_dataset = PushingDataset("train")
 
     predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
                                    weight_path=weight_path_MSMFormer)
@@ -89,8 +94,10 @@ if __name__ == "__main__":
     # Example of predicting and visualizing samples from OCID and OSD dataset
     # metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
     # test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
-    test_sample(cfg, dataset[5], predictor, visualization=True, topk=False,
-                     confident_score=0.7)
+    # for i in range(0, 20, 2):
+    #     test_sample(cfg, pushing_dataset[5], predictor, visualization=True, topk=False,
+    #                      confident_score=0.7)
+    test_dataset(cfg, pushing_dataset, predictor)
 
     # Uncomment to predict a series of samples
     # met_all = []

@@ -273,9 +273,13 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
 
         if self.use_other_backbone:
             # restore the initial RGB values
-            images = [x["raw_image"].to(self.device) for x in batched_inputs]
+            # images = [x["raw_image"].to(self.device) for x in batched_inputs]
+            # # use coco mean for ResNet50
+            # images = [(x - self.pixel_mean) / self.pixel_std for x in images]
+            # restore the initial RGB values
+            images = [x["image_color"].to(self.device) for x in batched_inputs]
             # use coco mean for ResNet50
-            images = [(x - self.pixel_mean) / self.pixel_std for x in images]
+            # images = [(x - self.pixel_mean) / self.pixel_std for x in images]
         # disable the normalization, just use the image from data mapper
         # if not self.feature_crop:
         #     images = [(x - self.pixel_mean) / self.pixel_std for x in images]
