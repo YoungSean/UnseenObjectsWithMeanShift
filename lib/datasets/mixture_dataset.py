@@ -38,6 +38,7 @@ class MixtureDataset(data.Dataset, datasets.imdb):
         self.pushing = PushingDataset(image_set=image_set)
         self._size = 2 * len(self.pushing)
         # we randomly pick tabletop samples with size of pushing samples
+        np.random.seed(42)
         self.tabletop_idx = np.random.randint(0, high=len(self.tabletop), size=len(self.pushing))
         print(self.tabletop_idx[:10])
 
