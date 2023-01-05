@@ -301,12 +301,12 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
                 if self.use_embedding_loss:
                     features = self.pretrained_backbone(images.tensor, None, images_depth.tensor)
                 else:
-                    features = self.pretrained_backbone(images.tensor, None, images_depth.tensor) #.detach()
+                    features = self.pretrained_backbone(images.tensor, None, images_depth.tensor) #.detach() # if use detach(), backbone is not trained
             else:
                 if self.use_embedding_loss:
                     features = self.pretrained_backbone(images.tensor, None)
                 else:
-                    features = self.pretrained_backbone(images.tensor, None).detach()
+                    features = self.pretrained_backbone(images.tensor, None) #.detach()
             # directly use the feature map from UCN
             norm_features = F.normalize(features, p=2, dim=1)
             new_features = {}
