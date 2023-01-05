@@ -290,7 +290,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         if self.use_other_backbone:
             features = self.pretrained_backbone(images.tensor)
             outputs, last_feature_map = self.sem_seg_head(features, images.tensor.shape[-2], images.tensor.shape[-1])  # need a pixel decoder
-        else:
+        else:  # use UCN pretrained backbone
             if self.use_depth:
                 if len(batched_inputs[0]["depth"].shape)==4:
                     images_depth = batched_inputs[0]["depth"].to(self.device)
@@ -301,7 +301,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
                 if self.use_embedding_loss:
                     features = self.pretrained_backbone(images.tensor, None, images_depth.tensor)
                 else:
-                    features = self.pretrained_backbone(images.tensor, None, images_depth.tensor).detach()
+                    features = self.pretrained_backbone(images.tensor, None, images_depth.tensor) #.detach()
             else:
                 if self.use_embedding_loss:
                     features = self.pretrained_backbone(images.tensor, None)

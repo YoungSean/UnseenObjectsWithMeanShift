@@ -81,15 +81,6 @@ def mask_to_tight_box(mask):
     bbox = np.min(a[:, 1]), np.min(a[:, 0]), np.max(a[:, 1]), np.max(a[:, 0])
     return bbox  # x_min, y_min, x_max, y_max
 
-# def getPushingDataset(image_set='train'):
-#     dataset = TableTopDataset(image_set=image_set)
-#     print("The size of the dataset is ", len(dataset))
-#     dataset_dicts = []
-#     for i in range(len(dataset)):
-#         dataset_dicts.append(dataset[i])
-#
-#     return dataset_dicts
-
 class PushingDataset(data.Dataset, datasets.imdb):
 
     def __init__(self, image_set="train", pushing_object_path = None, eval=False):
