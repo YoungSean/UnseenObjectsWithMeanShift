@@ -164,7 +164,7 @@ class Network_RGBD(DefaultPredictor):
             
 def test_sample(cfg, sample, predictor, visualization=False, topk=False, confident_score=0.9, low_threshold=0.4):
     im = cv2.imread(sample["file_name"])
-    print(sample["file_name"])
+    # print(sample["file_name"])
     if "label" in sample.keys():
         gt = sample["label"].squeeze().numpy()
     else:
@@ -181,7 +181,7 @@ def test_sample(cfg, sample, predictor, visualization=False, topk=False, confide
     # binary_mask = combine_masks(confident_instances)
     binary_mask, score_mask, bbox = combine_masks_with_NMS(confident_instances)
     metrics = multilabel_metrics(binary_mask, gt)
-    print(f"metrics: ", metrics)
+    # print(f"metrics: ", metrics)
     ## Visualize the result
     if visualization:
         v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)

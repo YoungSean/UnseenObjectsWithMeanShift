@@ -3,8 +3,8 @@ OUTPUT_DIR: "./output_norm"
 SOLVER:
   IMS_PER_BATCH: 4 # set batch size is 4
   BASE_LR: 0.0001
-  MAX_ITER: 71000  # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
-  CHECKPOINT_PERIOD: 17500 # save a checkpoint every 1/4 epoch
+  MAX_ITER: 2120  # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
+  CHECKPOINT_PERIOD: 1060 # save a checkpoint every 1/4 epoch
 INPUT:
   MASK_FORMAT: "bitmask"
   MIN_SIZE_TRAIN: (480,)
@@ -16,11 +16,11 @@ INPUT:
   RANDOM_FLIP: "none"
   #INPUT_IMAGE: 'RGB'
 DATASETS:
-  TRAIN: ("mixture_object_train",)
+  TRAIN: ("pushing_object_train",)
   TEST: ()
 MODEL:
-  USE_DEPTH: False 
-  USE_OTHER_BACKBONE: True 
+  USE_DEPTH: True #False
+  USE_OTHER_BACKBONE: False #False
   MASK_ON: True
   # PIXEL_MEAN: [102.9801, 115.9465, 122.7717]
   META_ARCHITECTURE: "PretrainedMeanShiftMaskFormer"
@@ -36,8 +36,8 @@ MODEL:
     MASK_DIM: 256 #256
     NORM: "GN"
     # pixel decoder
-    PIXEL_DECODER_NAME: "MSDeformAttnPixelDecoder" #"SimpleBasePixelDecoder"
-    IN_FEATURES: ["res2", "res3", "res4", "res5"]
+    PIXEL_DECODER_NAME: "SimpleBasePixelDecoder"
+    IN_FEATURES: ["res5", ]
     DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES: ["res3", "res4", "res5"]
     COMMON_STRIDE: 4
     TRANSFORMER_ENC_LAYERS: 6
@@ -46,7 +46,7 @@ MODEL:
     USE_MEANSHIFT_SELF_ATTENTION: True  # if true, we use mean shift self attention.
     DISABLE_MEANSHIFT_ATTENTION_MASK: False  # if true, we do not use attention mask.
     DECODER_BLOCK_NORM: True # if true, we normalize after each FFN of decoder blok. cross attention > self attention > FFN > normalization
-    TRANSFORMER_DECODER_NAME: "MeanShiftTransformerDecoder"
+    TRANSFORMER_DECODER_NAME: "PretrainedMeanShiftTransformerDecoder"
     TRANSFORMER_IN_FEATURE: "multi_scale_pixel_decoder"
     DEEP_SUPERVISION: True
     NO_OBJECT_WEIGHT: 0.1
@@ -62,7 +62,7 @@ MODEL:
     PRE_NORM: False
     ENFORCE_INPUT_PROJ: False
     SIZE_DIVISIBILITY: 32
-    DEC_LAYERS: 10  # =1+k, means that k decoder layers, add one for the loss on learnable query
+    DEC_LAYERS: 7  # =1+k, means that k decoder layers, add one for the loss on learnable query
     TRAIN_NUM_POINTS: 12544
     OVERSAMPLE_RATIO: 3.0
     IMPORTANCE_SAMPLE_RATIO: 0.75

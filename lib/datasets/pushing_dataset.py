@@ -59,8 +59,12 @@ data_loading_params = {
 }
 
 im_normalization = transforms.Normalize(
-    mean=[0.485, 0.456, 0.406],
-    std=[0.229, 0.224, 0.225]
+    # for RGB
+    # mean=[0.485, 0.456, 0.406],
+    # std=[0.229, 0.224, 0.225]
+    # for BGR
+    mean=[0.406, 0.456, 0.485],
+    std=[0.225, 0.224, 0.229]
 )
 
 im_transform = transforms.Compose([
@@ -80,6 +84,15 @@ def mask_to_tight_box(mask):
     a = np.transpose(np.nonzero(mask))
     bbox = np.min(a[:, 1]), np.min(a[:, 0]), np.max(a[:, 1]), np.max(a[:, 0])
     return bbox  # x_min, y_min, x_max, y_max
+
+# def getPushingDataset(image_set='train'):
+#     dataset = TableTopDataset(image_set=image_set)
+#     print("The size of the dataset is ", len(dataset))
+#     dataset_dicts = []
+#     for i in range(len(dataset)):
+#         dataset_dicts.append(dataset[i])
+#
+#     return dataset_dicts
 
 class PushingDataset(data.Dataset, datasets.imdb):
 
@@ -340,7 +353,7 @@ class PushingDataset(data.Dataset, datasets.imdb):
             xyz_img = None
 
         # crop
-        if cfg.TRAIN.SYN_CROP:
+        if cfg.TRAIN.SYN_CROP and cfg.MODE == 'TRAIN':
             #print(boxes)
             im, foreground_labels, xyz_img = self.pad_crop_resize(im, foreground_labels, xyz_img)
             foreground_labels = self.process_label(foreground_labels)
@@ -377,7 +390,7 @@ class PushingDataset(data.Dataset, datasets.imdb):
         label_blob = torch.from_numpy(foreground_labels).unsqueeze(0)
         record["label"] = label_blob
         # get RGB tensor
-        im_rgb = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        im_rgb = im #cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         # plt.imshow(im_rgb)
         # plt.show()
         im_tensor = im_transform(im_rgb)
