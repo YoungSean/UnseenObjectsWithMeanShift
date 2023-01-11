@@ -390,11 +390,17 @@ class PushingDataset(data.Dataset, datasets.imdb):
         label_blob = torch.from_numpy(foreground_labels).unsqueeze(0)
         record["label"] = label_blob
         # get RGB tensor
-        im_rgb = im #cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        self._pixel_mean = torch.tensor(cfg.PIXEL_MEANS / 255.0).float()
+        im_tensor = torch.from_numpy(im) / 255.0
+        im_tensor -= self._pixel_mean
+        image_blob = im_tensor.permute(2, 0, 1)
+
         # plt.imshow(im_rgb)
         # plt.show()
-        im_tensor = im_transform(im_rgb)
-        image_blob = im_tensor
+        # get RGB tensor
+        # im_rgb = im #cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        # im_tensor = im_transform(im_rgb)
+        # image_blob = im_tensor
         record['image_color'] = image_blob
         record["height"] = image_blob.shape[-2]
         record["width"] = image_blob.shape[-1]
