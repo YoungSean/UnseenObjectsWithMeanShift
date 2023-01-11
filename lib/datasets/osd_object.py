@@ -88,7 +88,8 @@ class OSDObject(data.Dataset, datasets.imdb):
                   'image_color_bgr': im_tensor_bgr,
                   'label': label_blob,
                   'filename': filename[index+4:],
-                  'file_name': filename}
+                  'file_name': filename,
+                  'raw_image': torch.from_numpy(im).permute(2, 0, 1)}
 
         # Depth image
         if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':

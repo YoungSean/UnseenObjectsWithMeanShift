@@ -368,7 +368,7 @@ class PushingDataset(data.Dataset, datasets.imdb):
             im = add_noise(im)
 
         record = {}
-        # record["raw_image"] = im
+        record["raw_image"] = torch.from_numpy(im).permute(2, 0, 1)
         record["raw_depth"] = xyz_img
         record["file_name"] = filename
         record["image_id"] = idx
