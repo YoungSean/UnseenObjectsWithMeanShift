@@ -36,8 +36,10 @@ class MixtureDataset(data.Dataset, datasets.imdb):
         self.eval = eval
         self.tabletop = TableTopDataset(image_set=image_set)
         self.pushing = PushingDataset(image_set=image_set)
-        self._size = 2 * len(self.pushing)
+        self.pushing_factor = 2
+        self._size = len(self.pushing) * self.pushing_factor
         np.random.seed(42) 
+
         # we randomly pick tabletop samples with size of pushing samples
         # self.tabletop_idx = np.random.randint(0, high=len(self.tabletop), size=len(self.pushing))
         # print(self.tabletop_idx[:10])
@@ -46,10 +48,9 @@ class MixtureDataset(data.Dataset, datasets.imdb):
         return self._size
 
     def __getitem__(self, idx):
-        # odd sample is from tabletop
-        # even sample is from pushing
-        dataset_idx = idx // 2
-        if idx % 2 == 0:
+        dataset_idx = idx // self.pushing_factor
+        # idx / 2 or 4
+        if idx % 4 == 0:
             return self.pushing[dataset_idx]
         else:
             return self.tabletop[np.random.randint(0, high=len(self.tabletop), size=1)[0]]

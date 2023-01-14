@@ -368,7 +368,7 @@ class PushingDataset(data.Dataset, datasets.imdb):
             im = add_noise(im)
 
         record = {}
-        # record["raw_image"] = im
+        # record["raw_image"] = torch.from_numpy(im).permute(2, 0, 1)
         record["raw_depth"] = xyz_img
         record["file_name"] = filename
         record["image_id"] = idx
@@ -389,12 +389,20 @@ class PushingDataset(data.Dataset, datasets.imdb):
         # obtain label tensor
         label_blob = torch.from_numpy(foreground_labels).unsqueeze(0)
         record["label"] = label_blob
-        # get RGB tensor
-        im_rgb = im #cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        self._pixel_mean = torch.tensor(cfg.PIXEL_MEANS / 255.0).float()
+        im_tensor = torch.from_numpy(im) / 255.0
+        im_tensor -= self._pixel_mean
+        image_blob = im_tensor.permute(2, 0, 1)
+
         # plt.imshow(im_rgb)
         # plt.show()
-        im_tensor = im_transform(im_rgb)
-        image_blob = im_tensor
+        # get RGB tensor
+        # im_rgb = im #cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        # im_tensor = im_transform(im_rgb)
+        # image_blob = im_tensor
+        # use coco mean and std
+        if cfg.INPUT == 'COLOR':
+            image_blob = (torch.from_numpy(im).permute(2, 0, 1) - torch.Tensor([123.675, 116.280, 103.530]).view(-1, 1, 1).float()) / torch.Tensor([58.395, 57.120, 57.375]).view(-1, 1, 1).float()
         record['image_color'] = image_blob
         record["height"] = image_blob.shape[-2]
         record["width"] = image_blob.shape[-1]

@@ -19,6 +19,7 @@ DATASETS:
   TRAIN: ("mixture_object_train",)
   TEST: ()
 MODEL:
+  WEIGHTS: "./output_1229_Res50_learn_10dec/model_0017499.pth"
   USE_DEPTH: False 
   USE_OTHER_BACKBONE: True 
   MASK_ON: True

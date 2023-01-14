@@ -275,12 +275,12 @@ def setup(args):
     cfg = get_cfg()
     add_deeplab_config(cfg)
     add_meanshiftformer_config(cfg)
-    cfg_file = "configs/crop_mixture_UCN.yaml"
+    cfg_file = "configs/crop_mixture_ResNet50.yaml"
     cfg.merge_from_file(cfg_file)
     # cfg.merge_from_file(args.config_file)
     # cfg.merge_from_list(args.opts)
     # some configs for demo training
-    cfg.OUTPUT_DIR = "./crop_0109_trainable_UCN_mixture2_RGBD"
+    cfg.OUTPUT_DIR = "./crop_RGB_mixture2_0112"
     # RGBD UCN
     # cfg.MODEL.WEIGHTS = "../data/checkpoints/output_1008_normal_BGR_model_0069999.pth"
     # COLOR, only RGB, UCN
