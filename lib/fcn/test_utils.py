@@ -26,6 +26,8 @@ import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
 from nms import nms
+ 
+USE_NMS = True # "True" is used for real world images. Generally, we set it as False.
 
 
 # Reference: https://www.reddit.com/r/computervision/comments/jb6b18/get_binary_mask_image_from_detectron2/
@@ -164,7 +166,7 @@ class Network_RGBD(DefaultPredictor):
             
 def test_sample(cfg, sample, predictor, visualization=False, topk=False, confident_score=0.9, low_threshold=0.4):
     im = cv2.imread(sample["file_name"])
-    print(sample["file_name"])
+    # print(sample["file_name"])
     if "label" in sample.keys():
         gt = sample["label"].squeeze().numpy()
     else:
@@ -178,10 +180,13 @@ def test_sample(cfg, sample, predictor, visualization=False, topk=False, confide
     confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
                                                   num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
                                                   low_threshold=low_threshold)
-    # binary_mask = combine_masks(confident_instances)
-    binary_mask, score_mask, bbox = combine_masks_with_NMS(confident_instances)
+
+    if USE_NMS:
+        binary_mask, score_mask, bbox = combine_masks_with_NMS(confident_instances)
+    else:
+        binary_mask = combine_masks(confident_instances)
     metrics = multilabel_metrics(binary_mask, gt)
-    print(f"metrics: ", metrics)
+    # print(f"metrics: ", metrics)
     ## Visualize the result
     if visualization:
         v = Visualizer(im[:, :, ::-1], MetadataCatalog.get(cfg.DATASETS.TRAIN[0]), scale=1.2)
@@ -228,7 +233,10 @@ def get_result_from_network(cfg, image, depth, label, predictor, topk=False, con
         cv2.imshow("image_segmentation", visual_result)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
-    binary_mask, score_mask, bbox = combine_masks_with_NMS(confident_instances)
+    if USE_NMS:
+        binary_mask, score_mask, bbox = combine_masks_with_NMS(confident_instances)
+    else:
+        binary_mask = combine_masks(confident_instances)
     return binary_mask
 
 
@@ -255,7 +263,10 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
     confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
                                                   num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
                                                   low_threshold=low_threshold)
-    binary_mask, score_mask, bbox = combine_masks_with_NMS(confident_instances)
+    if USE_NMS:
+        binary_mask, score_mask, bbox = combine_masks_with_NMS(confident_instances)
+    else:
+        binary_mask = combine_masks(confident_instances)
     metrics = multilabel_metrics(binary_mask, gt)
     if print_result:
         print("file name: ", sample["file_name"])
@@ -344,7 +355,10 @@ def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualizati
     confident_instances = get_confident_instances(outputs, topk=topk, score=confident_score,
                                                   num_class=cfg.MODEL.SEM_SEG_HEAD.NUM_CLASSES,
                                                   low_threshold=low_threshold)
-    binary_mask, score_mask, bbox = combine_masks_with_NMS(confident_instances)
+    if USE_NMS:
+        binary_mask, score_mask, bbox = combine_masks_with_NMS(confident_instances)
+    else:
+        binary_mask = combine_masks(confident_instances)
 
     if visualization:
         im = cv2.imread(sample["file_name"])  # this is for visualization
@@ -357,7 +371,8 @@ def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualizati
         cv2.destroyAllWindows()
 
     out_label = torch.as_tensor(binary_mask).unsqueeze(dim=0).cuda()
-    out_score = torch.as_tensor(score_mask).unsqueeze(dim=0).cuda()    
+    if USE_NMS:
+        out_score = torch.as_tensor(score_mask).unsqueeze(dim=0).cuda()
     if depth is not None:
         if len(depth.shape) == 3:
             depth = torch.unsqueeze(depth, dim=0)

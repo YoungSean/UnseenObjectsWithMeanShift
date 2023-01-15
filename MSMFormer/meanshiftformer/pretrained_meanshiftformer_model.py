@@ -271,20 +271,14 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         else:
             images = [x["image"].to(self.device) for x in batched_inputs]
 
-        if self.use_other_backbone:
-            # restore the initial RGB values
-            # images = [x["raw_image"].to(self.device) for x in batched_inputs]
-            # # use coco mean for ResNet50
+        # if self.use_other_backbone:
+        #     # restore the initial RGB values, use coco mean for ResNet50
+        #     # images = [x["raw_image"].to(self.device) for x in batched_inputs]
+        #     images = [x["image"].to(self.device) for x in batched_inputs]
             # images = [(x - self.pixel_mean) / self.pixel_std for x in images]
-            # restore the initial RGB values
-            images = [x["image_color"].to(self.device) for x in batched_inputs]
-            # use coco mean for ResNet50
-            # images = [(x - self.pixel_mean) / self.pixel_std for x in images]
-        # disable the normalization, just use the image from data mapper
-        # if not self.feature_crop:
-        #     images = [(x - self.pixel_mean) / self.pixel_std for x in images]
-        #images = [(x - self.pixel_mean / 255.0) for x in images]
-        #images = torch.stack(images, dim=0)
+
+
+
         images = ImageList.from_tensors(images, self.size_divisibility)
 
         if self.use_other_backbone:

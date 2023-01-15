@@ -84,11 +84,16 @@ class OSDObject(data.Dataset, datasets.imdb):
         label_blob = torch.from_numpy(foreground_labels).unsqueeze(0)
 
         index = filename.find('OSD')
+        # use coco mean and std
+        if cfg.INPUT == 'COLOR':
+            image_blob = (torch.from_numpy(im).permute(2, 0, 1) - torch.Tensor([123.675, 116.280, 103.530]).view(-1, 1, 1).float()) / torch.Tensor([58.395, 57.120, 57.375]).view(-1, 1, 1).float()
         sample = {'image_color': image_blob,
                   'image_color_bgr': im_tensor_bgr,
                   'label': label_blob,
                   'filename': filename[index+4:],
-                  'file_name': filename}
+                  'file_name': filename,
+                  # 'raw_image': torch.from_numpy(im).permute(2, 0, 1)
+                  }
 
         # Depth image
         if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':

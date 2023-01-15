@@ -1,31 +1,30 @@
-_BASE_: Base-COCO-InstanceSegmentation.yaml
-OUTPUT_DIR: "./output_norm"
+_BASE_: tabletop_pretrained_ResNet50.yaml
+OUTPUT_DIR: "./output_crop"
+INPUT:
+  MASK_FORMAT: "bitmask"
+  IMAGE_SIZE: 224
+  MIN_SIZE_TRAIN: (224,)
+  #MIN_SIZE_TEST: (224,)
+  MAX_SIZE_TRAIN: 224
+  MAX_SIZE_TEST: 224
+  MIN_SIZE_TEST: 0
+  DATASET_MAPPER_NAME: "unseen_instance"
 SOLVER:
   IMS_PER_BATCH: 4 # set batch size is 4
   BASE_LR: 0.0001
-  MAX_ITER: 71000  # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
-  CHECKPOINT_PERIOD: 17500 # save a checkpoint every 1/4 epoch
-INPUT:
-  MASK_FORMAT: "bitmask"
-  MIN_SIZE_TRAIN: (480,)
-  #MIN_SIZE_TEST: (480,)
-  MAX_SIZE_TRAIN: 800
-  MAX_SIZE_TEST: 800
-  MIN_SIZE_TEST: 0
-  DATASET_MAPPER_NAME: "unseen_instance"
-  RANDOM_FLIP: "none"
-  #INPUT_IMAGE: 'RGB'
+  MAX_ITER: 71000   # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
+  CHECKPOINT_PERIOD: 8750 # save a checkpoint every 1/8 epoch
 DATASETS:
   TRAIN: ("tabletop_object_train",)
   TEST: ()
 MODEL:
-  USE_DEPTH: False #False
-  USE_OTHER_BACKBONE: True #False
+  USE_DEPTH: False 
+  USE_OTHER_BACKBONE: True 
   MASK_ON: True
   # PIXEL_MEAN: [102.9801, 115.9465, 122.7717]
   META_ARCHITECTURE: "PretrainedMeanShiftMaskFormer"
   EMBEDDING:
-    FEATURE_CROP: False
+    FEATURE_CROP: True
     USE_LOSS: False
   SEM_SEG_HEAD:
     NAME: "PretrainedMeanShiftMaskFormerHead"
@@ -33,10 +32,10 @@ MODEL:
     NUM_CLASSES: 2
     LOSS_WEIGHT: 1.0
     CONVS_DIM: 64
-    MASK_DIM: 256 #256
+    MASK_DIM: 256
     NORM: "GN"
     # pixel decoder
-    PIXEL_DECODER_NAME: "MSDeformAttnPixelDecoder" #"SimpleBasePixelDecoder"
+    PIXEL_DECODER_NAME: "MSDeformAttnPixelDecoder"
     IN_FEATURES: ["res2", "res3", "res4", "res5"]
     DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES: ["res3", "res4", "res5"]
     COMMON_STRIDE: 4
@@ -74,5 +73,3 @@ MODEL:
       OBJECT_MASK_THRESHOLD: 0.8
 TEST:
   DETECTIONS_PER_IMAGE: 20
-  EVAL_PERIOD: 0
-CUDNN_BENCHMARK: True
