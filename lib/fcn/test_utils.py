@@ -27,7 +27,7 @@ import cv2 as cv
 from matplotlib import pyplot as plt
 from nms import nms
  
-USE_NMS = False 
+USE_NMS = True # "True" is used for real world images. Generally, we set it as False.
 
 
 # Reference: https://www.reddit.com/r/computervision/comments/jb6b18/get_binary_mask_image_from_detectron2/
@@ -371,7 +371,8 @@ def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualizati
         cv2.destroyAllWindows()
 
     out_label = torch.as_tensor(binary_mask).unsqueeze(dim=0).cuda()
-    out_score = torch.as_tensor(score_mask).unsqueeze(dim=0).cuda()    
+    if USE_NMS:
+        out_score = torch.as_tensor(score_mask).unsqueeze(dim=0).cuda()
     if depth is not None:
         if len(depth.shape) == 3:
             depth = torch.unsqueeze(depth, dim=0)
