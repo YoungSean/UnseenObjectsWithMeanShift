@@ -203,6 +203,8 @@ class ImageListener:
             label_msg_refined.header.frame_id = rgb_frame_id
             label_msg_refined.encoding = 'mono8'
             self.label_refined_pub.publish(label_msg_refined)
+            num_object = len(np.unique(label_refined)) - 1
+            print('%d objects after refinement' % (num_object))
 
         # publish segmentation images
         im_label = visualize_segmentation(im_color[:, :, (2, 1, 0)], label, return_rgb=True)
