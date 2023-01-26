@@ -8,7 +8,7 @@ Segmenting unseen objects is a critical task in many different domains. For exam
 ### Mean Shift Mask Transformer Architecture
 <p align="center"><img src="./data/pics/model.png" width="624" height="340"/></p>
 
-
+<!---
 ### Citation
 
 If you find Mean Shift Mask Transformer useful in your research, please consider citing:
@@ -25,6 +25,7 @@ If you find Mean Shift Mask Transformer useful in your research, please consider
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 ```
+-->
 ### Required Environment
 - Ubuntu 16.04 or above
 - PyTorch 0.4.1 or above
