@@ -3,8 +3,8 @@ OUTPUT_DIR: "./output_norm"
 SOLVER:
   IMS_PER_BATCH: 4 # set batch size is 4
   BASE_LR: 0.0001
-  MAX_ITER: 71000  # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
-  CHECKPOINT_PERIOD: 17500 # save a checkpoint every 1/4 epoch
+  MAX_ITER: 2120  # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
+  CHECKPOINT_PERIOD: 1060 # save a checkpoint every 1/4 epoch
 INPUT:
   MASK_FORMAT: "bitmask"
   MIN_SIZE_TRAIN: (480,)
@@ -16,11 +16,12 @@ INPUT:
   RANDOM_FLIP: "none"
   #INPUT_IMAGE: 'RGB'
 DATASETS:
-  TRAIN: ("tabletop_object_train",)
+  TRAIN: ("mixture_object_train",)
   TEST: ()
 MODEL:
-  USE_DEPTH: False
-  USE_OTHER_BACKBONE: False
+  # WEIGHTS: "../data/checkpoints/output_1008_normal_BGR_model_0069999.pth"
+  USE_DEPTH: True  
+  USE_OTHER_BACKBONE: False 
   MASK_ON: True
   # PIXEL_MEAN: [102.9801, 115.9465, 122.7717]
   META_ARCHITECTURE: "PretrainedMeanShiftMaskFormer"
@@ -33,7 +34,7 @@ MODEL:
     NUM_CLASSES: 2
     LOSS_WEIGHT: 1.0
     CONVS_DIM: 64
-    MASK_DIM: 256
+    MASK_DIM: 256 #256
     NORM: "GN"
     # pixel decoder
     PIXEL_DECODER_NAME: "SimpleBasePixelDecoder"

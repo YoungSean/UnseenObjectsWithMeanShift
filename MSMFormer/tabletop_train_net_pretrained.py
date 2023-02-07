@@ -59,6 +59,8 @@ from meanshiftformer import (
     add_maskformer2_config,
 )
 from datasets.tabletop_dataset import TableTopDataset, getTabletopDataset
+from datasets.pushing_dataset import PushingDataset
+from datasets.mixture_dataset import MixtureDataset
 from tabletop_config import add_tabletop_config
 from meanshiftformer.config import add_meanshiftformer_config
 
@@ -252,7 +254,18 @@ for d in ["train", "test"]:
     else:
         DatasetCatalog.register("tabletop_object_" + d, lambda d=d: getTabletopDataset(d))
     MetadataCatalog.get("tabletop_object_" + d).set(thing_classes=['__background__', 'object'])
-metadata = MetadataCatalog.get("tabletop_object_train")
+
+    DatasetCatalog.register("pushing_object_" + d, lambda d=d: PushingDataset(d))
+    MetadataCatalog.get("pushing_object_" + d).set(thing_classes=['__background__', 'object'])
+
+    DatasetCatalog.register("mixture_object_" + d, lambda d=d: MixtureDataset(d))
+    MetadataCatalog.get("mixture_object_" + d).set(thing_classes=['__background__', 'object'])
+#
+# metadata = MetadataCatalog.get("tabletop_object_train")
+
+
+
+# metadata = MetadataCatalog.get("pushing_object_train")
 
 
 def setup(args):
@@ -262,15 +275,19 @@ def setup(args):
     cfg = get_cfg()
     add_deeplab_config(cfg)
     add_meanshiftformer_config(cfg)
-    cfg_file = "configs/tabletop_pretrained.yaml"
+    cfg_file = "configs/crop_mixture_ResNet50.yaml"
     cfg.merge_from_file(cfg_file)
     # cfg.merge_from_file(args.config_file)
     # cfg.merge_from_list(args.opts)
     # some configs for demo training
-    # cfg.OUTPUT_DIR = "./output_1213_normal"
-    # cfg.MODEL.WEIGHTS = ""
-    # cfg.SOLVER.MAX_ITER = 20
-    # cfg.SOLVER.CHECKPOINT_PERIOD = 1000
+    cfg.OUTPUT_DIR = "./crop_RGB_mixture2_0112"
+    # RGBD UCN
+    # cfg.MODEL.WEIGHTS = "../data/checkpoints/output_1008_normal_BGR_model_0069999.pth"
+    # COLOR, only RGB, UCN
+    #cfg.MODEL.WEIGHTS = "../data/checkpoints/RGB_norm_model_0069999.pth"
+    #cfg.MODEL.WEIGHTS = "./output_1229_Res50_learn_10dec/model_0017499.pth"
+    cfg.SOLVER.MAX_ITER = 1000
+    cfg.SOLVER.CHECKPOINT_PERIOD = 160
     cfg.freeze()
     default_setup(cfg, args)
     # Setup logger for "mask_former" module

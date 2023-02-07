@@ -175,7 +175,7 @@ class ImageListener:
 
         # run the network
         # out_label, out_label_refined = test_sample(sample, self.network, self.network_crop)
-        out_label, out_label_refined, out_score, bbox = test_sample_crop_nolabel(self.cfg_transformer, sample, self.predictor, self.predictor_crop, visualization=False, topk=False, confident_score=0.8, print_result=True)
+        out_label, out_label_refined, out_score, bbox = test_sample_crop_nolabel(self.cfg_transformer, sample, self.predictor, self.predictor_crop, visualization=False, topk=False, confident_score=0.2, print_result=True)
 
         # publish segmentation mask
         label = out_label[0].cpu().numpy()
@@ -203,6 +203,8 @@ class ImageListener:
             label_msg_refined.header.frame_id = rgb_frame_id
             label_msg_refined.encoding = 'mono8'
             self.label_refined_pub.publish(label_msg_refined)
+            num_object = len(np.unique(label_refined)) - 1
+            print('%d objects after refinement' % (num_object))
 
         # publish segmentation images
         im_label = visualize_segmentation(im_color[:, :, (2, 1, 0)], label, return_rgb=True)

@@ -16,11 +16,12 @@ INPUT:
   RANDOM_FLIP: "none"
   #INPUT_IMAGE: 'RGB'
 DATASETS:
-  TRAIN: ("tabletop_object_train",)
+  TRAIN: ("mixture_object_train",)
   TEST: ()
 MODEL:
-  USE_DEPTH: False
-  USE_OTHER_BACKBONE: False
+  WEIGHTS: "./output_1229_Res50_learn_10dec/model_0017499.pth"
+  USE_DEPTH: False 
+  USE_OTHER_BACKBONE: True 
   MASK_ON: True
   # PIXEL_MEAN: [102.9801, 115.9465, 122.7717]
   META_ARCHITECTURE: "PretrainedMeanShiftMaskFormer"
@@ -33,11 +34,11 @@ MODEL:
     NUM_CLASSES: 2
     LOSS_WEIGHT: 1.0
     CONVS_DIM: 64
-    MASK_DIM: 256
+    MASK_DIM: 256 #256
     NORM: "GN"
     # pixel decoder
-    PIXEL_DECODER_NAME: "SimpleBasePixelDecoder"
-    IN_FEATURES: ["res5", ]
+    PIXEL_DECODER_NAME: "MSDeformAttnPixelDecoder" #"SimpleBasePixelDecoder"
+    IN_FEATURES: ["res2", "res3", "res4", "res5"]
     DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES: ["res3", "res4", "res5"]
     COMMON_STRIDE: 4
     TRANSFORMER_ENC_LAYERS: 6
@@ -46,7 +47,7 @@ MODEL:
     USE_MEANSHIFT_SELF_ATTENTION: True  # if true, we use mean shift self attention.
     DISABLE_MEANSHIFT_ATTENTION_MASK: False  # if true, we do not use attention mask.
     DECODER_BLOCK_NORM: True # if true, we normalize after each FFN of decoder blok. cross attention > self attention > FFN > normalization
-    TRANSFORMER_DECODER_NAME: "PretrainedMeanShiftTransformerDecoder"
+    TRANSFORMER_DECODER_NAME: "MeanShiftTransformerDecoder"
     TRANSFORMER_IN_FEATURE: "multi_scale_pixel_decoder"
     DEEP_SUPERVISION: True
     NO_OBJECT_WEIGHT: 0.1
@@ -62,7 +63,7 @@ MODEL:
     PRE_NORM: False
     ENFORCE_INPUT_PROJ: False
     SIZE_DIVISIBILITY: 32
-    DEC_LAYERS: 7  # =1+k, means that k decoder layers, add one for the loss on learnable query
+    DEC_LAYERS: 10  # =1+k, means that k decoder layers, add one for the loss on learnable query
     TRAIN_NUM_POINTS: 12544
     OVERSAMPLE_RATIO: 3.0
     IMPORTANCE_SAMPLE_RATIO: 0.75

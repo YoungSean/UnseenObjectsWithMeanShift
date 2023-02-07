@@ -65,8 +65,9 @@ def get_backbone(pretrained_file=pretrained_path):
     # network = torch.nn.DataParallel(network, device_ids=[0]).cuda()
     # cudnn.benchmark = True
     # network.eval()
-    for param in network.parameters():
-        param.requires_grad = False
+
+    # for param in network.parameters():
+    #     param.requires_grad = False
 
     return network
 
@@ -85,8 +86,8 @@ def get_backbone_crop(pretrained_crop_file=pretrained_crop_path):
         network_crop = None
 
     cudnn.benchmark = True
-    for param in network_crop.parameters():
-        param.requires_grad = False
+    # for param in network_crop.parameters():
+    #     param.requires_grad = False
 
     return network_crop
 

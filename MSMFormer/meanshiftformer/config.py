@@ -46,6 +46,8 @@ def add_meanshiftformer_config(cfg):
     cfg.MODEL.EMBEDDING.NORMALIZE = False
     # USE DEPTH OR NOT
     cfg.MODEL.USE_DEPTH = False
+    # use other backbone instead of UCN pretrained backbone
+    cfg.MODEL.USE_OTHER_BACKBONE = False
 
     # transformer config
     cfg.MODEL.MASK_FORMER.NHEADS = 8 #1 # We do not need multihead in mean shift attention

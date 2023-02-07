@@ -13,14 +13,16 @@ import cv2
 import glob
 import matplotlib.pyplot as plt
 import datasets
-
+import scipy.io
 from fcn.config import cfg
 from utils.blob import chromatic_transform, add_noise
 from utils import augmentation
 from utils import mask as util_
 from detectron2.structures import BoxMode
 import pycocotools
+from pathlib import Path
 from detectron2.data import detection_utils as utils
+from torchvision import transforms
 
 data_loading_params = {
 
@@ -56,46 +58,26 @@ data_loading_params = {
     'pixel_dropout_beta': 10.,
 }
 
+im_normalization = transforms.Normalize(
+    # for RGB
+    # mean=[0.485, 0.456, 0.406],
+    # std=[0.229, 0.224, 0.225]
+    # for BGR
+    mean=[0.406, 0.456, 0.485],
+    std=[0.225, 0.224, 0.229]
+)
 
-def compute_xyz(depth_img, camera_params):
-    """ Compute ordered point cloud from depth image and camera parameters.
+im_transform = transforms.Compose([
+    transforms.ToTensor(),
+    im_normalization,
+])
 
-        If focal lengths fx,fy are stored in the camera_params dictionary, use that.
-        Else, assume camera_params contains parameters used to generate synthetic data (e.g. fov, near, far, etc)
-
-        @param depth_img: a [H x W] numpy array of depth values in meters
-        @param camera_params: a dictionary with parameters of the camera used
-    """
-
-    # Compute focal length from camera parameters
-    if 'fx' in camera_params and 'fy' in camera_params:
-        fx = camera_params['fx']
-        fy = camera_params['fy']
-    else:  # simulated data
-        aspect_ratio = camera_params['img_width'] / camera_params['img_height']
-        e = 1 / (np.tan(np.radians(camera_params['fov'] / 2.)))
-        t = camera_params['near'] / e;
-        b = -t
-        r = t * aspect_ratio;
-        l = -r
-        alpha = camera_params['img_width'] / (r - l)  # pixels per meter
-        focal_length = camera_params['near'] * alpha  # focal length of virtual camera (frustum camera)
-        fx = focal_length;
-        fy = focal_length
-
-    if 'x_offset' in camera_params and 'y_offset' in camera_params:
-        x_offset = camera_params['x_offset']
-        y_offset = camera_params['y_offset']
-    else:  # simulated data
-        x_offset = camera_params['img_width'] / 2
-        y_offset = camera_params['img_height'] / 2
-
-    indices = util_.build_matrix_of_indices(camera_params['img_height'], camera_params['img_width'])
+def compute_xyz(depth_img, fx, fy, px, py, height, width):
+    indices = np.indices((height, width), dtype=np.float32).transpose(1,2,0)
     z_e = depth_img
-    x_e = (indices[..., 1] - x_offset) * z_e / fx
-    y_e = (indices[..., 0] - y_offset) * z_e / fy
-    xyz_img = np.stack([x_e, y_e, z_e], axis=-1)  # Shape: [H x W x 3]
-
+    x_e = (indices[..., 1] - px) * z_e / fx
+    y_e = (indices[..., 0] - py) * z_e / fy
+    xyz_img = np.stack([x_e, y_e, z_e], axis=-1) # Shape: [H x W x 3]
     return xyz_img
 
 def mask_to_tight_box(mask):
@@ -103,23 +85,23 @@ def mask_to_tight_box(mask):
     bbox = np.min(a[:, 1]), np.min(a[:, 0]), np.max(a[:, 1]), np.max(a[:, 0])
     return bbox  # x_min, y_min, x_max, y_max
 
-def getTabletopDataset(image_set='train'):
-    dataset = TableTopDataset(image_set=image_set)
-    print("The size of the dataset is ", len(dataset))
-    dataset_dicts = []
-    for i in range(len(dataset)):
-        dataset_dicts.append(dataset[i])
+# def getPushingDataset(image_set='train'):
+#     dataset = TableTopDataset(image_set=image_set)
+#     print("The size of the dataset is ", len(dataset))
+#     dataset_dicts = []
+#     for i in range(len(dataset)):
+#         dataset_dicts.append(dataset[i])
+#
+#     return dataset_dicts
 
-    return dataset_dicts
+class PushingDataset(data.Dataset, datasets.imdb):
 
-class TableTopDataset(data.Dataset, datasets.imdb):
+    def __init__(self, image_set="train", pushing_object_path = None, eval=False):
 
-    def __init__(self, image_set="train", tabletop_object_path = None, data_mapper = False, eval=False):
-
-        self._name = 'tabletop_object_' + image_set
+        self._name = 'pushing_object_' + image_set
         self._image_set = image_set
-        self._tabletop_object_path = self._get_default_path() if tabletop_object_path is None \
-                            else tabletop_object_path
+        self._pushing_object_path = self._get_default_path() if pushing_object_path is None \
+                            else pushing_object_path
         self._classes_all = ('__background__', 'foreground')
         # self._classes_all = (
         #     "__background__ ",
@@ -129,34 +111,32 @@ class TableTopDataset(data.Dataset, datasets.imdb):
         self._classes = self._classes_all
         self._pixel_mean = torch.tensor(cfg.PIXEL_MEANS / 255.0).float()
         self.params = data_loading_params
-        self.data_mapper = data_mapper
         self.eval = eval
-
-        # crop dose not use background
-        if cfg.TRAIN.SYN_CROP:
-            self.NUM_VIEWS_PER_SCENE = 5
-        else:
-            self.NUM_VIEWS_PER_SCENE = 7
 
         # get a list of all scenes
         if image_set == 'train':
-            data_path = os.path.join(self._tabletop_object_path, 'training_set')
-            self.scene_dirs = sorted(glob.glob(data_path + '/*'))
+            data_path = os.path.join(self._pushing_object_path, 'training_set')
+            self._pushing_object_path = data_path
         elif image_set == 'test':
-            data_path = os.path.join(self._tabletop_object_path, 'test_set')
-            print(data_path)
-            self.scene_dirs = sorted(glob.glob(data_path + '/*'))
+            data_path = os.path.join(self._pushing_object_path, 'test_set')
+            # self.data_path = sorted(glob.glob(data_path + '/*'))
+            self._pushing_object_path = data_path
         elif image_set == 'all':
-            data_path = os.path.join(self._tabletop_object_path, 'training_set')
-            scene_dirs_train = sorted(glob.glob(data_path + '/*'))
-            data_path = os.path.join(self._tabletop_object_path, 'test_set')
-            scene_dirs_test = sorted(glob.glob(data_path + '/*'))
-            self.scene_dirs = scene_dirs_train + scene_dirs_test
+            data_path = os.path.join(self._pushing_object_path, 'training_set')
+            # scene_dirs_train = sorted(glob.glob(data_path + '/*'))
+            data_path = os.path.join(self._pushing_object_path, 'test_set')
+            # scene_dirs_test = sorted(glob.glob(data_path + '/*'))
+            # self.data_path = scene_dirs_train + scene_dirs_test
+            self._pushing_object_path = data_path
 
-        print('%d scenes for dataset %s' % (len(self.scene_dirs), self._name))
-        self._size = len(self.scene_dirs) * self.NUM_VIEWS_PER_SCENE
-        assert os.path.exists(self._tabletop_object_path), \
-                'tabletop_object path does not exist: {}'.format(self._tabletop_object_path)
+
+        self.image_paths = self.list_dataset()
+
+        print('%d images for dataset %s' % (len(self.image_paths), self._name))
+        self._size = len(self.image_paths)
+
+        assert os.path.exists(self._pushing_object_path), \
+                'pushing_object path does not exist: {}'.format(self._pushing_object_path)
 
     def process_depth(self, depth_img):
         """ Process depth channel
@@ -229,6 +209,7 @@ class TableTopDataset(data.Dataset, datasets.imdb):
         for k in range(unique_nonnegative_indices.shape[0]):
             mapped_labels[foreground_labels == unique_nonnegative_indices[k]] = k
         foreground_labels = mapped_labels
+        # print("mapped labels", np.unique(mapped_labels))
         return foreground_labels
 
     def pad_crop_resize(self, img, label, depth):
@@ -315,43 +296,64 @@ class TableTopDataset(data.Dataset, datasets.imdb):
                 labels_new[index[0][selected], index[1][selected]] = i
         return labels_new
 
+    def list_dataset(self):
+        data_path = Path(self._pushing_object_path)
+        # print('data path', data_path)
+        seqs = sorted(list(Path(data_path).glob('*/*T*')))
+        # print(seqs)
+
+        image_paths = []
+        for seq in seqs:
+            paths = sorted(list((seq).glob('color*.jpg')))
+            image_paths += paths
+        return image_paths
 
     def __getitem__(self, idx):
+        # BGR image
+        filename = str(self.image_paths[idx])
+        # print("file name", filename)
+        im = cv2.imread(filename)
 
-        # Get scene directory, crop dose not use background
-        scene_idx = idx // self.NUM_VIEWS_PER_SCENE
-        scene_dir = self.scene_dirs[scene_idx]
-
-        # Get view number
-        view_num = idx % self.NUM_VIEWS_PER_SCENE
-        if cfg.TRAIN.SYN_CROP:
-            view_num += 2
+        # meta data
+        meta_filename = filename.replace('color', 'meta').replace('jpg', 'mat')
+        data = scipy.io.loadmat(meta_filename)
 
         # Label
-        foreground_labels_filename = os.path.join(scene_dir, 'segmentation_%05d.png' % view_num)
-        foreground_labels = util_.imread_indexed(foreground_labels_filename)
-        # here we do not keep table. Then, we have three classes: background, table, objects
-        # mask table as background
-        foreground_labels[foreground_labels == 1] = 0
+        labels_filename = filename.replace('color', 'label-final').replace('jpg', 'png')
+        foreground_labels = cv2.imread(labels_filename, cv2.IMREAD_GRAYSCALE)
+        # unique_indices = np.unique(foreground_labels)
+        # print('unique masks', unique_indices)
         boxes, binary_masks, labels = self.process_label_to_annos(foreground_labels)
         foreground_labels = self.process_label(foreground_labels)
-        # boxes.shape: [num_instances x 4], binary_masks.shape: [num_instances x H x W], labels.shape: [num_instances]
+        # plt.imshow(foreground_labels * 50)
+        # plt.show()
 
-        # BGR image
-        # print(cfg.INPUT)
-        filename = os.path.join(scene_dir, 'rgb_%05d.jpeg' % view_num)
-        im = cv2.imread(filename)
+
+        # boxes.shape: [num_instances x 4], binary_masks.shape: [num_instances x H x W], labels.shape: [num_instances]
 
         if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
             # Depth image
-            depth_img_filename = os.path.join(scene_dir, 'depth_%05d.png' % view_num)
-            depth_img = cv2.imread(depth_img_filename, cv2.IMREAD_ANYDEPTH) # This reads a 16-bit single-channel image. Shape: [H x W]
-            xyz_img = self.process_depth(depth_img)
+            depth_img_filename = filename.replace('color', 'depth').replace('jpg', 'png')
+            depth_img = cv2.imread(depth_img_filename, cv2.IMREAD_ANYDEPTH).astype(np.float32) # This reads a 16-bit single-channel image. Shape: [H x W]
+            # get xyz_img
+            height = depth_img.shape[0]
+            width = depth_img.shape[1]
+            factor_depth = data['factor_depth']
+            intrinsics = data['intrinsic_matrix']
+            fx = intrinsics[0, 0]
+            fy = intrinsics[1, 1]
+            px = intrinsics[0, 2]
+            py = intrinsics[1, 2]
+
+            depth_img /= factor_depth
+            xyz_img = compute_xyz(depth_img, fx, fy, px, py, height, width)
+            # plt.imshow(xyz_img)
+            # plt.show()
         else:
             xyz_img = None
 
         # crop
-        if cfg.TRAIN.SYN_CROP:
+        if cfg.TRAIN.SYN_CROP and cfg.MODE == 'TRAIN':
             #print(boxes)
             im, foreground_labels, xyz_img = self.pad_crop_resize(im, foreground_labels, xyz_img)
             foreground_labels = self.process_label(foreground_labels)
@@ -360,14 +362,13 @@ class TableTopDataset(data.Dataset, datasets.imdb):
         # sample labels
         if cfg.TRAIN.EMBEDDING_SAMPLING:
             foreground_labels = self.sample_pixels(foreground_labels, cfg.TRAIN.EMBEDDING_SAMPLING_NUM)
-
         if cfg.TRAIN.CHROMATIC and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
             im = chromatic_transform(im)
         if cfg.TRAIN.ADD_NOISE and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
             im = add_noise(im)
 
-        record= {}
-        # record["raw_image"] = im
+        record = {}
+        # record["raw_image"] = torch.from_numpy(im).permute(2, 0, 1)
         record["raw_depth"] = xyz_img
         record["file_name"] = filename
         record["image_id"] = idx
@@ -385,25 +386,32 @@ class TableTopDataset(data.Dataset, datasets.imdb):
             objs.append(obj)
         record["annotations"] = objs
 
+        # obtain label tensor
         label_blob = torch.from_numpy(foreground_labels).unsqueeze(0)
         record["label"] = label_blob
-
+        self._pixel_mean = torch.tensor(cfg.PIXEL_MEANS / 255.0).float()
         im_tensor = torch.from_numpy(im) / 255.0
         im_tensor -= self._pixel_mean
         image_blob = im_tensor.permute(2, 0, 1)
+
+        # plt.imshow(im_rgb)
+        # plt.show()
+        # get RGB tensor
+        # im_rgb = im #cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        # im_tensor = im_transform(im_rgb)
+        # image_blob = im_tensor
         # use coco mean and std
         if cfg.INPUT == 'COLOR':
             image_blob = (torch.from_numpy(im).permute(2, 0, 1) - torch.Tensor([123.675, 116.280, 103.530]).view(-1, 1, 1).float()) / torch.Tensor([58.395, 57.120, 57.375]).view(-1, 1, 1).float()
         record['image_color'] = image_blob
         record["height"] = image_blob.shape[-2]
         record["width"] = image_blob.shape[-1]
-        # record['raw_image'] = torch.from_numpy(im).permute(2, 0, 1)
 
         if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
             depth_blob = torch.from_numpy(xyz_img).permute(2, 0, 1)
             record['depth'] = depth_blob
         # record["image"] = torch.permute(torch.from_numpy(im), (2, 0, 1))
-
+        # print("label shape",label_blob.shape)
         return record
 
     def __len__(self):
@@ -414,7 +422,7 @@ class TableTopDataset(data.Dataset, datasets.imdb):
         """
         Return the default path where tabletop_object is expected to be installed.
         """
-        return os.path.join(datasets.ROOT_DIR, 'data', 'tabletop')
+        return os.path.join(datasets.ROOT_DIR, 'data', 'pushing_data')
         # return os.path.join(datasets.ROOT_DIR, 'data', 'tabletop_demo')
 
     def get_img_info(self, idx):
