@@ -19,7 +19,7 @@ DATASETS:
   TRAIN: ("mixture_object_train",)
   TEST: ()
 MODEL:
-  WEIGHTS: "../data/checkpoints/output_1008_normal_BGR_model_0069999.pth"
+  # WEIGHTS: "../data/checkpoints/output_1008_normal_BGR_model_0069999.pth"
   USE_DEPTH: True  
   USE_OTHER_BACKBONE: False 
   MASK_ON: True

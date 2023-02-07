@@ -28,14 +28,14 @@ cfg = __C
 
 __C.device = 'cuda:0'
 __C.FLIP_X = False
-__C.INPUT = 'COLOR' #'COLOR' or 'RGBD'
+__C.INPUT = 'RGBD' #'COLOR' or 'RGBD'
 __C.NETWORK = 'VGG16'
 __C.RIG = ''
 __C.CAD = ''
 __C.POSE = ''
 __C.BACKGROUND = ''
 __C.USE_GPU_NMS = True
-__C.MODE = 'TRAIN'
+__C.MODE = 'TEST'
 __C.INTRINSICS = ()
 __C.DATA_PATH = ''
 
@@ -126,7 +126,7 @@ __C.TRAIN.SYN_TNEAR = 0.5
 __C.TRAIN.SYN_TFAR = 2.0
 __C.TRAIN.SYN_BOUND = 0.4
 __C.TRAIN.SYN_SAMPLE_DISTRACTOR = True
-__C.TRAIN.SYN_CROP = False #False
+__C.TRAIN.SYN_CROP = False
 __C.TRAIN.SYN_CROP_SIZE = 224
 __C.TRAIN.SYN_TABLE_PROB = 0.8
 
