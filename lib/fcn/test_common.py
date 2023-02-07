@@ -204,12 +204,15 @@ def _vis_minibatch_segmentation_final(image, depth, label, out_label=None, out_l
             plt.axis('off')
 
         if ind is not None:
-            mng = plt.get_current_fig_manager()
-            mng.resize(*mng.window.maxsize())
-            plt.pause(0.001)
+            # mng = plt.get_current_fig_manager()
+            # mng.resize(*mng.window.maxsize())
+            # plt.pause(0.001)
             # plt.show(block=False)
-            filename = 'output/images/%06d.png' % ind
-            fig.savefig(filename)
+            # filename = 'output/images/%06d.png' % ind
+            # fig.savefig(filename)
+            # plt.close()
+            filename = './output/images/%06d.png' % ind
+            fig.savefig(filename, bbox_inches='tight', dpi=1200)
             plt.close()
         else:
             plt.show()
