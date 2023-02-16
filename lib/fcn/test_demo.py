@@ -25,11 +25,7 @@ warnings.simplefilter("ignore", UserWarning)
 from test_utils import test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD, test_sample_crop_nolabel
 
 dirname = os.path.dirname(__file__)
-# ./output_1218_demo_many2one/model_final.pth
-# cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/tabletop_pretrained.yaml')
-# weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")
-# cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/tabletop_pretrained_ResNet50.yaml')
-# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/output_1226_Res50/model_final.pth")
+
 
 # # RGB
 # cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/mixture_ResNet50.yaml')
@@ -38,26 +34,11 @@ dirname = os.path.dirname(__file__)
 #
 # RGBD
 cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/mixture_UCN.yaml')
-# weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/output_1008_normal_BGR_model_0069999.pth")
-# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/output_0106_trainable_UCN_mixture2_RGBD/model_0000639.pth")
-# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/norm_0110_RGBD_mixture2/model_0000799.pth")
-# weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/rgbd_pretrain/norm_RGBD_pretrained.pth")
 weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/rgbd_finetuned/norm_RGBD_finetuned_data04_OCID_5epoch.pth")
-# weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/rgbd_finetuned/norm_RGBD_finetuned_OSD_1epoch.pth")
 
-# cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
-# weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
 
 cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_mixture_UCN.yaml")
-# weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
 weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/rgbd_pretrain/crop_RGBD_pretrained.pth")
-# weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/rgbd_finetuned/crop_RGBD_finetuned_OCID_4epoch.pth")
-# weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/rgbd_finetuned/crop_RGBD_finetuned_data04_OSD_1epoch.pth")
-
-# cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_mixture_ResNet50.yaml")
-# weight_path_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/crop_RGB_pretrained_0111_ResNet/model_0034999.pth")
-# weight_path_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/crop_RGB_mixture2_0112/model_0000319.pth")
-
 
 def get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD"):
     cfg = get_cfg()
@@ -105,7 +86,6 @@ if __name__ == "__main__":
     # weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")
     # cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
     # weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
-    # dataset = TableTopDataset(data_mapper=True, eval=True)
     ocid_dataset = OCIDDataset(image_set="test")
     osd_dataset = OSDObject(image_set="test")
     pushing_dataset = PushingDataset("test")
@@ -117,18 +97,16 @@ if __name__ == "__main__":
 
     predictor_crop, cfg_crop = get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop,
                                                   weight_path=weight_path_MSMFormer_crop)
-    # print("first stage model weight: ", weight_path_MSMFormer)
-    # print("second stage model weight: ", weight_path_MSMFormer_crop)
+
     # Example of predicting and visualizing samples from OCID and OSD dataset
     # metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
     test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
 
+    # one stage model testing
     # test_dataset(cfg, pushing_dataset, predictor)
     # test_dataset(cfg, osd_dataset, predictor)
     # test_dataset(cfg, ocid_dataset, predictor)
     # test_sample(cfg, pushing_dataset[0], predictor, visualization=True)
-    # test_sample_crop(cfg, pushing_dataset[5], predictor, predictor_crop, visualization=True, topk=False,
-    #                  confident_score=0.7, print_result=True)
 
     # Uncomment to predict a series of samples
     # met_all = []
@@ -142,23 +120,7 @@ if __name__ == "__main__":
     # print("Boundary F-measure", np.mean(np.array(met_all)))
     # print("Refined Boundary F-measure", np.mean(np.array(met_refined_all)))
 
-    # candidates = [166,168]
-    # for i in candidates:
-    #     metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[i], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7)
-    #
-    # for i in candidates:
-    #     weight_path_MSMFormer = os.path.join(dirname,
-    #                                          "../../data/checkpoints/rgbd_finetuned/norm_RGBD_finetuned_data04_OCID_5epoch.pth")
-    #
-    #     predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
-    #                                    weight_path=weight_path_MSMFormer,
-    #                                    # input_image = "COLOR"
-    #                                    )
-    #
-    #     test_sample_crop(cfg, ocid_dataset[i], predictor, predictor_crop, visualization=True,
-    #                      topk=False, confident_score=0.7)
     # # Uncomment to predict the whole dataset (OSD/OCID)
-    # print("baseline: best finetuned 1 for OCID_data")
     # test_dataset_crop(cfg, ocid_dataset, predictor, predictor_crop, visualization=False, topk=False, confident_score=0.7)
     # test_dataset_crop(cfg, osd_dataset, predictor, predictor_crop, visualization=False, topk=False, confident_score=0.7)
     # test_dataset_crop(cfg, pushing_dataset, predictor, predictor_crop, visualization=False, topk=False, confident_score=0.7)

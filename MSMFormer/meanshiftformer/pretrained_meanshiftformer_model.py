@@ -147,6 +147,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         self.feature_crop = feature_crop
         if self.use_other_backbone:
             self.pretrained_backbone = backbone
+            # uncomment to freeze the backbone
             # for param in self.pretrained_backbone.parameters():
             #     param.requires_grad = False
         else:
@@ -271,14 +272,6 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         else:
             images = [x["image"].to(self.device) for x in batched_inputs]
 
-        # if self.use_other_backbone:
-        #     # restore the initial RGB values, use coco mean for ResNet50
-        #     # images = [x["raw_image"].to(self.device) for x in batched_inputs]
-        #     images = [x["image"].to(self.device) for x in batched_inputs]
-            # images = [(x - self.pixel_mean) / self.pixel_std for x in images]
-
-
-
         images = ImageList.from_tensors(images, self.size_divisibility)
 
         if self.use_other_backbone:
@@ -300,7 +293,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
                 if self.use_embedding_loss:
                     features = self.pretrained_backbone(images.tensor, None)
                 else:
-                    features = self.pretrained_backbone(images.tensor, None) #.detach()
+                    features = self.pretrained_backbone(images.tensor, None)#.detach()
             # directly use the feature map from UCN
             norm_features = F.normalize(features, p=2, dim=1)
             new_features = {}
@@ -330,7 +323,6 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
                 emdedding_loss, intra_cluster_loss, inter_cluster_loss = self.embedding_loss(features, labels)
                 losses["embedding_loss"] = emdedding_loss
                 self.criterion.weight_dict["embedding_loss"] = self.embedding_loss_weight
-            # print("losses", losses)
 
             for k in list(losses.keys()):
                 if k in self.criterion.weight_dict:
