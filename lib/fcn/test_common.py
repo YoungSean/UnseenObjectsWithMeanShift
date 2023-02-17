@@ -125,8 +125,11 @@ def _vis_minibatch_segmentation_final(image, depth, label, out_label=None, out_l
     for i in range(num):
         # image
         im = im_blob[i, :3, :, :].copy()
+        # For RGB-D with UCN backbone
         im = im.transpose((1, 2, 0)) * 255.0
         im += cfg.PIXEL_MEANS
+        # For ResNet50 backbone
+        # im = im.transpose((1, 2, 0)) * [58.395, 57.120, 57.375] + [123.675, 116.280, 103.530]
         im = im[:, :, (2, 1, 0)]
         im = np.clip(im, 0, 255)
         im = im.astype(np.uint8)

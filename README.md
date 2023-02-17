@@ -1,8 +1,12 @@
-# Mean Shift Mask Transformer for Unseen Object Instance Segmentation
+# Unseen Object Instance Segmentation with MSMFormer
+
+This repository includes: Mean Shift Mask Transformer and its finetuned version with long-term robot interaction.
+
+## Mean Shift Mask Transformer for Unseen Object Instance Segmentation
 
 ### Introduction
 Segmenting unseen objects is a critical task in many different domains. For example, a robot may need to grasp an unseen object, which means it needs to visually separate this object from the background and/or other objects. Mean shift clustering is a common method in object segmentation tasks. However, the traditional mean shift clustering algorithm is not easily integrated into an end-to-end neural network training pipeline. In this work, we propose the Mean Shift Mask Transformer (MSMFormer), a new transformer architecture that simulates the von Mises-Fisher (vMF) mean shift clustering algorithm, allowing for the joint training and inference of both the feature extractor and the clustering. Its central component is a hypersphere attention mechanism, which updates object queries on a hypersphere. To illustrate the effectiveness of our method, we apply MSMFormer to Unseen Object Instance Segmentation, which yields a new state-of-the-art of 87.3 Boundary F-measure on the real-world Object Clutter Indoor Dataset (OCID).
-[arXiv](https://arxiv.org/abs/2211.11679)
+[arXiv](https://arxiv.org/abs/2211.11679)  [project](https://irvlutd.github.io/MSMFormer/)
 <p align="center"><img src="./data/pics/overview.png" width="797" height="523"/></p>
 
 ### Mean Shift Mask Transformer Architecture
@@ -25,7 +29,27 @@ If you find Mean Shift Mask Transformer useful in your research, please consider
   copyright = {arXiv.org perpetual, non-exclusive license}
 }
 ```
+## Self-Supervised Unseen Object Instance Segmentation via Long-Term Robot Interaction
+### Introduction
+We introduce a novel robotic system for improving unseen object instance segmentation in the real world by leveraging long-term robot interaction with objects. Previous approaches either grasp or push an object and then obtain the segmentation mask of the grasped or pushed object after one action. Instead, our system defers the decision on segmenting objects after a sequence of robot pushing actions. By applying multi-object tracking and video object segmentation on the images collected via robot pushing, our system can generate segmentation masks of all the objects in these images in a self-supervised way. These include images where objects are very close to each other, and segmentation errors usually occur on these images for existing object segmentation networks. We demonstrate the usefulness of our system by fine-tuning segmentation networks trained on synthetic data with real-world data collected by our system. We show that, after fine-tuning, the segmentation accuracy of the networks is significantly improved both in the same domain and across different domains. In addition, we verify that the fine-tuned networks improve top-down robotic grasping of unseen objects in the real world.
+[arXiv](https://arxiv.org/abs/2302.03793) [project](https://irvlutd.github.io/SelfSupervisedSegmentation/)
+### Citation
 
+If you find the method useful in your research, please consider citing:
+
+```
+@misc{https://doi.org/10.48550/arxiv.2302.03793,
+  doi = {10.48550/ARXIV.2302.03793},
+  url = {https://arxiv.org/abs/2302.03793},
+  author = {Lu, Yangxiao and Khargonkar, Ninad and Xu, Zesheng and Averill, Charles and Palanisamy, Kamalesh and Hang, Kaiyu and Guo, Yunhui and Ruozzi, Nicholas and Xiang, Yu},
+  keywords = {Robotics (cs.RO), Computer Vision and Pattern Recognition (cs.CV), Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
+  title = {Self-Supervised Unseen Object Instance Segmentation via Long-Term Robot Interaction},
+  publisher = {arXiv},
+  year = {2023},
+  copyright = {Creative Commons Attribution 4.0 International}
+}
+
+```
 ### Required Environment
 - Ubuntu 16.04 or above
 - PyTorch 0.4.1 or above
@@ -58,6 +82,7 @@ python -m pip install numpy==1.23.1
 - Download the pretrained backbone checkpoints from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering). They are *seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth* and *seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth*. 
 Then move the checkpoint files into $ROOT/data/checkpoints. 
 - Download our trained checkpoints from [here](https://drive.google.com/drive/folders/1lmmTLqlNlN4AjwzWT7lmPrMygQNS7FmR?usp=sharing). Then move the checkpoint files into $ROOT/data/checkpoints.
+- Download our finetuned checkpoints from [here](https://utdallas.box.com/s/vzp8nmalowg4i58y8b9sghv5s7f36xpz). The model is finetuned by [a dataset from robot interaction](https://utdallas.app.box.com/s/yipcemru6qsbw0wj1nsdxq1dw5mjbtiq).
 
 ### Training on the Tabletop Object Dataset (TOD)
 1. Download the Tabletop Object Dataset (TOD) from [here](https://drive.google.com/uc?export=download&id=1Du309Ye8J7v2c4fFGuyPGjf-C3-623vw) (34G).
@@ -102,8 +127,9 @@ Then move the checkpoint files into $ROOT/data/checkpoints.
 1. For Demo images in $ROOT/data/demo, you can run $ROOT/experiments/scripts/demo_msmformer_rgbd.sh to see the visual results. (* demo_msmformer_rgb.sh is only using RGB information.)
 <p align="center"><img src="./data/pics/Figure_2.png" width="640" height="380"/> <img src="./data/pics/Figure_7.png" width="640" height="380"/></p>
 
+2. ROOT/experiments/scripts/demo_msmformer_rgbd_finetuned.sh is using the finetuned weights.
 
-2. An example python script is $ROOT/tools/test_image_with_ms_transformer.py.
+3. An example python script is $ROOT/tools/test_image_with_ms_transformer.py.
 
    In terminal, run the following command:
    ```shell
@@ -125,8 +151,9 @@ Then move the checkpoint files into $ROOT/data/checkpoints.
    --depth *-depth.png \
    --pretrained data/checkpoints/norm_model_0069999.pth \
    --pretrained_crop data/checkpoints/crop_dec9_model_final.pth \
-   --network_cfg MSMFormer/configs/tabletop_pretrained.yaml \
-   --network_crop_cfg MSMFormer/configs/crop_tabletop_pretrained.yaml
+   --network_cfg MSMFormer/configs/mixture_UCN.yaml  \
+   --network_crop_cfg MSMFormer/configs/crop_mixture_UCN.yaml \
+   --input_image RGBD_ADD
    ```
 
 ### Running with ROS on a real camera for real-world unseen object instance segmentation
