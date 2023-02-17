@@ -48,7 +48,6 @@ If you find the method useful in your research, please consider citing:
   year = {2023},
   copyright = {Creative Commons Attribution 4.0 International}
 }
-
 ```
 ### Required Environment
 - Ubuntu 16.04 or above
@@ -82,7 +81,7 @@ python -m pip install numpy==1.23.1
 - Download the pretrained backbone checkpoints from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering). They are *seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth* and *seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth*. 
 Then move the checkpoint files into $ROOT/data/checkpoints. 
 - Download our trained checkpoints from [here](https://drive.google.com/drive/folders/1lmmTLqlNlN4AjwzWT7lmPrMygQNS7FmR?usp=sharing). Then move the checkpoint files into $ROOT/data/checkpoints.
-- Download our finetuned checkpoints from [here](https://utdallas.box.com/s/vzp8nmalowg4i58y8b9sghv5s7f36xpz). The model is finetuned by [a dataset from robot interaction](https://utdallas.app.box.com/s/yipcemru6qsbw0wj1nsdxq1dw5mjbtiq).
+- Download our fine-tuned checkpoints from [here](https://utdallas.box.com/s/vzp8nmalowg4i58y8b9sghv5s7f36xpz) (No login needed). The model is finetuned by [a dataset from robot interaction](https://utdallas.app.box.com/s/yipcemru6qsbw0wj1nsdxq1dw5mjbtiq).
 
 ### Training on the Tabletop Object Dataset (TOD)
 1. Download the Tabletop Object Dataset (TOD) from [here](https://drive.google.com/uc?export=download&id=1Du309Ye8J7v2c4fFGuyPGjf-C3-623vw) (34G).
@@ -127,7 +126,7 @@ Then move the checkpoint files into $ROOT/data/checkpoints.
 1. For Demo images in $ROOT/data/demo, you can run $ROOT/experiments/scripts/demo_msmformer_rgbd.sh to see the visual results. (* demo_msmformer_rgb.sh is only using RGB information.)
 <p align="center"><img src="./data/pics/Figure_2.png" width="640" height="380"/> <img src="./data/pics/Figure_7.png" width="640" height="380"/></p>
 
-2. ROOT/experiments/scripts/demo_msmformer_rgbd_finetuned.sh is using the finetuned weights.
+2. $ROOT/experiments/scripts/demo_msmformer_*_finetuned.sh files use the fine-tuned weights.
 
 3. An example python script is $ROOT/tools/test_image_with_ms_transformer.py.
 
