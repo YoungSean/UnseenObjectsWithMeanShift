@@ -106,7 +106,7 @@ if __name__ == "__main__":
     # test_dataset(cfg, pushing_dataset, predictor)
     # test_dataset(cfg, osd_dataset, predictor)
     # test_dataset(cfg, ocid_dataset, predictor)
-    test_sample(cfg, pushing_dataset[20], predictor, visualization=True)
+    test_sample(cfg, pushing_dataset[25], predictor, visualization=True)
 
     # Uncomment to predict a series of samples
     # met_all = []

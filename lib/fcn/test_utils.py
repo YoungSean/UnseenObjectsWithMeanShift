@@ -48,16 +48,26 @@ def get_confident_instances(outputs, topk=False, score=0.7, num_class=2, low_thr
         else:
             return instances
     confident_instances = instances[instances.scores > score]
-    uncertain_mask = confident_instances[0].uncertain_mask.cpu().detach().numpy().squeeze(0)
+    print("Number of confident instances: ", len(confident_instances))
+    # uncertain_mask = confident_instances[0].uncertain_mask.cpu().detach().numpy().squeeze(0)  # pushing 14 4
     # uncertain_mask = uncertain_mask / uncertain_mask.max()
-    print("uncertain masks", uncertain_mask)
-    plt.imshow(uncertain_mask, cmap='gray')
-    plt.show()
-    print("unique values: ", np.unique(uncertain_mask))
-    print("max value", uncertain_mask.max())
+    if len(confident_instances) > 0:
+        uncertain_mask = confident_instances[0].uncertain_mask.cpu().detach().numpy().squeeze(0)
+        uncertain_mask = uncertain_mask / uncertain_mask.max()
+        if len(confident_instances) > 1:
+            for i in range(1, len(confident_instances)):
+                cur_uncertain = confident_instances[i].uncertain_mask.cpu().detach().numpy().squeeze(0)
+                cur_uncertain = cur_uncertain / cur_uncertain.max()
+                uncertain_mask += cur_uncertain
+
+        print("uncertain masks", uncertain_mask)
+        plt.imshow(uncertain_mask, cmap='gray')
+        plt.show()
+        print("unique values: ", np.unique(uncertain_mask))
+        print("max value", uncertain_mask.max())
 
     return confident_instances
-    
+
 
 def combine_masks_with_NMS(instances):
     """
