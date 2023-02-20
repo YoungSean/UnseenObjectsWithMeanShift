@@ -487,7 +487,7 @@ class PretrainedMeanShiftMaskFormer(nn.Module):
         # mask (before sigmoid)
         result.pred_masks = (mask_pred > 0).float()
         # uncertain_mask = torch.nn.functional.relu(mask_pred, inplace=False)
-        uncertain_mask = torch.nn.functional.softmax(mask_pred, dim=-1)
+        uncertain_mask = torch.nn.functional.softmax(mask_pred, dim=0)
         # print(torch.amax(uncertain_mask, dim=(1, 2)))
         result.set('uncertain_mask', uncertain_mask)
         result.pred_boxes = Boxes(torch.zeros(mask_pred.size(0), 4))
