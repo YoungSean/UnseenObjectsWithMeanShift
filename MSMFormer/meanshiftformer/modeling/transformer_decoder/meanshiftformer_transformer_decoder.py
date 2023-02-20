@@ -1007,6 +1007,7 @@ class PretrainedMeanShiftTransformerDecoder(nn.Module):
                 predictions_class if self.mask_classification else None, predictions_mask
             )
         }
+
         return out
 
     def forward_prediction_heads(self, output, mask_features, attn_mask_target_size, normalize_before_mask=False):

@@ -86,8 +86,8 @@ if __name__ == "__main__":
     # weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")
     # cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
     # weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
-    ocid_dataset = OCIDDataset(image_set="test")
-    osd_dataset = OSDObject(image_set="test")
+    # ocid_dataset = OCIDDataset(image_set="test")
+    # osd_dataset = OSDObject(image_set="test")
     pushing_dataset = PushingDataset("test")
 
     predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
@@ -100,13 +100,13 @@ if __name__ == "__main__":
 
     # Example of predicting and visualizing samples from OCID and OSD dataset
     # metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
-    test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+    # test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
 
     # one stage model testing
     # test_dataset(cfg, pushing_dataset, predictor)
     # test_dataset(cfg, osd_dataset, predictor)
     # test_dataset(cfg, ocid_dataset, predictor)
-    # test_sample(cfg, pushing_dataset[0], predictor, visualization=True)
+    test_sample(cfg, pushing_dataset[20], predictor, visualization=True)
 
     # Uncomment to predict a series of samples
     # met_all = []

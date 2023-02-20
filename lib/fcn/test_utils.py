@@ -37,6 +37,7 @@ def get_confident_instances(outputs, topk=False, score=0.7, num_class=2, low_thr
     Extract objects with high prediction scores.
     """
     instances = outputs["instances"]
+
     if topk:
         # we need to remove background predictions
         # keep only object class
@@ -47,6 +48,14 @@ def get_confident_instances(outputs, topk=False, score=0.7, num_class=2, low_thr
         else:
             return instances
     confident_instances = instances[instances.scores > score]
+    uncertain_mask = confident_instances[0].uncertain_mask.cpu().detach().numpy().squeeze(0)
+    # uncertain_mask = uncertain_mask / uncertain_mask.max()
+    print("uncertain masks", uncertain_mask)
+    plt.imshow(uncertain_mask, cmap='gray')
+    plt.show()
+    print("unique values: ", np.unique(uncertain_mask))
+    print("max value", uncertain_mask.max())
+
     return confident_instances
     
 
