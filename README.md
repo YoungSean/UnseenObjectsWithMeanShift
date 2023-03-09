@@ -70,7 +70,7 @@ Some code is from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering) and [
 The main folder is **$ROOT/MSMFormer/meanshiftformer**. The Python classes begin with "pretrained" are used for Unseen Object Instance Segmentation.
 The Hypersphere Attention is in [this file](https://github.com/YoungSean/UnseenObjectsWithMeanShift/blob/master/MSMFormer/meanshiftformer/modeling/transformer_decoder/attention_util.py).
 
-If there has an error like *AttributeError: module 'numpy' has no attribute 'bool'*, try to reinstall numpy package as follows:
+If there is an error like *AttributeError: module 'numpy' has no attribute 'bool'*, try to reinstall numpy package as follows:
 ```shell
 python -m pip uninstall numpy
 python -m pip install numpy==1.23.1
