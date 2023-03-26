@@ -80,7 +80,7 @@ python -m pip install numpy==1.23.1
 - Create a folder $ROOT/data/checkpoints
 - Download the pretrained backbone checkpoints from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering). They are *seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth* and *seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth*. 
 Then move the checkpoint files into $ROOT/data/checkpoints. 
-- Download our trained checkpoints from [here](https://drive.google.com/drive/folders/1lmmTLqlNlN4AjwzWT7lmPrMygQNS7FmR?usp=sharing). Then move the checkpoint files into $ROOT/data/checkpoints.
+- Download our trained checkpoints from [here](https://utdallas.box.com/s/e93nx0gj3x38so4o3zj3p9fzo3pvwqgy). Then move the checkpoint files into $ROOT/data/checkpoints.
 - Download our fine-tuned checkpoints from [here](https://utdallas.box.com/s/vzp8nmalowg4i58y8b9sghv5s7f36xpz) (No login needed). The model is finetuned by [a dataset from robot interaction](https://utdallas.app.box.com/s/yipcemru6qsbw0wj1nsdxq1dw5mjbtiq).
 
 ### Training on the Tabletop Object Dataset (TOD)
