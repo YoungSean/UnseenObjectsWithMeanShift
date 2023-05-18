@@ -279,12 +279,13 @@ def setup(args):
     cfg = get_cfg()
     add_deeplab_config(cfg)
     add_meanshiftformer_config(cfg)
-    cfg_file = "configs/UOAIS_ResNet50.yaml"
+    # cfg_file = "configs/UOAIS_ResNet50.yaml"
+    cfg_file = "configs/UOAIS_UCN.yaml"
     cfg.merge_from_file(cfg_file)
     # cfg.merge_from_file(args.config_file)
     # cfg.merge_from_list(args.opts)
     # some configs for demo training
-    cfg.OUTPUT_DIR = "./RGB_uoais_0518"
+    cfg.OUTPUT_DIR = "./RGB_uoais_0518_RGBD"
     # RGBD UCN
     # cfg.MODEL.WEIGHTS = "../data/checkpoints/output_1008_normal_BGR_model_0069999.pth"
     # COLOR, only RGB, UCN
