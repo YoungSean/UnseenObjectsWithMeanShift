@@ -10,6 +10,7 @@ from .tabletop_dataset import getTabletopDataset, TableTopDataset
 from .ocid_dataset import OCIDDataset
 from .pushing_dataset import PushingDataset
 from .mixture_dataset import MixtureDataset
+from .uoais_dataset import UOAIS_Dataset
 
 import os.path as osp
 ROOT_DIR = osp.join(osp.dirname(__file__), '..', '..')
