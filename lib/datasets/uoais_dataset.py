@@ -208,10 +208,10 @@ class  UOAIS_Dataset(data.Dataset, datasets.imdb):
         depth[depth > self.depth_max] = self.depth_max
         depth[depth < self.depth_min] = self.depth_min
         depth = (depth - self.depth_min) / (self.depth_max - self.depth_min) * 255
-        plt.imshow(depth)
-        plt.show()
+        # plt.imshow(depth)
+        # plt.show()
         depth = np.expand_dims(depth, -1)
-        depth = np.uint8(np.repeat(depth, 3, -1))
+        depth = np.repeat(depth, 3, -1)
         depth = torch.from_numpy(depth).permute(2, 0, 1) / 255.0  # how to deal with the depth image? to do
 
         record['depth'] = depth
@@ -260,11 +260,35 @@ class  UOAIS_Dataset(data.Dataset, datasets.imdb):
         meta=MetadataCatalog.get("tabletop_object_train")
         img = np.array(Image.open(record["file_name"]))
         visualizer = Visualizer(img, metadata=meta)
+        masks = [x["segmentation"] for x in record["annotations"]]
         vis = visualizer.draw_dataset_dict(record)
-        fpath = os.path.join(dirname, os.path.basename(record["file_name"]))
-        vis.save(fpath)
+        masks = visualizer._convert_masks(masks)
+        areas = np.asarray([x.area() for x in masks])
+        sorted_idxs = np.argsort(-areas).tolist()
+        self.masks = [masks[idx] for idx in sorted_idxs] if masks is not None else None
+        label = self.from_masks_to_label()
+
+        # obtain label tensor
+        label_blob = torch.from_numpy(label).unsqueeze(0)
+        record["label"] = label_blob
+        # plt.imshow(label)
+        # plt.show()
+        # print("label shape", label.shape)
+        # print("label unique", np.unique(label))
+        # print('label:', label)
+
+        # plt.imshow(labels[0]['mask'])
+        # plt.show()
+        # fpath = os.path.join(dirname, os.path.basename(record["file_name"]))
+        # vis.save(fpath)
         return record
 
+    def from_masks_to_label(self):
+        inital_mask = self.masks[0].mask
+        for i in range(len(self.masks)):
+            mask = self.masks[i].mask
+            inital_mask[mask!=0] = i+1
+        return inital_mask
 
     def _get_default_path(self):
         """
@@ -275,8 +299,6 @@ class  UOAIS_Dataset(data.Dataset, datasets.imdb):
     def __len__(self):
         return 100
         #return len(self.imgs_anns)
-
-
 
 
 def load_uoais_json(json_file, image_root, dataset_name=None, extra_annotation_keys=None):

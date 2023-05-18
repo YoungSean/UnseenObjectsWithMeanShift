@@ -16,6 +16,7 @@ from detectron2.projects.deeplab import add_deeplab_config
 from detectron2.config import get_cfg
 from tabletop_config import add_tabletop_config
 from datasets.pushing_dataset import PushingDataset
+from datasets.uoais_dataset import UOAIS_Dataset
 
 # ignore some warnings
 import warnings
@@ -30,13 +31,16 @@ dirname = os.path.dirname(__file__)
 # # RGB
 # cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/mixture_ResNet50.yaml')
 # weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/output_1229_Res50_learn_10dec/model_0017499.pth") 
-# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/norm_0111_RGB_mixture2_updated/model_0000319.pth") 
+# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/norm_0111_RGB_mixture2_updated/model_0000319.pth")
+
+cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/UOAIS_ResNet50.yaml')
+weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/RGB_uoais_0518/model_final.pth")
 #
 # RGBD
-cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/mixture_UCN.yaml')
-weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/rgbd_finetuned/norm_RGBD_finetuned_data04_OCID_5epoch.pth")
-
-
+# cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/mixture_UCN.yaml')
+# weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/rgbd_finetuned/norm_RGBD_finetuned_data04_OCID_5epoch.pth")
+#
+#
 cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_mixture_UCN.yaml")
 weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/rgbd_pretrain/crop_RGBD_pretrained.pth")
 
@@ -86,21 +90,29 @@ if __name__ == "__main__":
     # weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")
     # cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
     # weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
-    ocid_dataset = OCIDDataset(image_set="test")
+    # ocid_dataset = OCIDDataset(image_set="test")
     osd_dataset = OSDObject(image_set="test")
-    pushing_dataset = PushingDataset("test")
-
+    # pushing_dataset = PushingDataset("test")
+    uoais_dataset = UOAIS_Dataset("train")
     predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
                                    weight_path=weight_path_MSMFormer,
-                                   # input_image = "COLOR"
+                                   input_image = "COLOR"
                                    )
 
-    predictor_crop, cfg_crop = get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop,
-                                                  weight_path=weight_path_MSMFormer_crop)
+    # test_sample(cfg, uoais_dataset[0], predictor, visualization=True)
+    test_sample(cfg, osd_dataset[0], predictor, visualization=True)
 
-    # Example of predicting and visualizing samples from OCID and OSD dataset
-    # metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
-    test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+    # predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
+    #                                weight_path=weight_path_MSMFormer,
+    #                                # input_image = "COLOR"
+    #                                )
+    #
+    # predictor_crop, cfg_crop = get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop,
+    #                                               weight_path=weight_path_MSMFormer_crop)
+    #
+    # # Example of predicting and visualizing samples from OCID and OSD dataset
+    # # metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
+    # test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
 
     # one stage model testing
     # test_dataset(cfg, pushing_dataset, predictor)
