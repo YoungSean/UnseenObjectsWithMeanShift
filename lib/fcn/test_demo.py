@@ -17,6 +17,7 @@ from detectron2.config import get_cfg
 from tabletop_config import add_tabletop_config
 from datasets.pushing_dataset import PushingDataset
 from datasets.uoais_dataset import UOAIS_Dataset
+from datasets.load_OSD_UOAIS import OSDObject_UOAIS
 
 # ignore some warnings
 import warnings
@@ -33,12 +34,12 @@ dirname = os.path.dirname(__file__)
 # weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/output_1229_Res50_learn_10dec/model_0017499.pth") 
 # weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/norm_0111_RGB_mixture2_updated/model_0000319.pth")
 
-cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/UOAIS_ResNet50.yaml')
-weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/RGB_uoais_0518/model_final.pth")
+# cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/UOAIS_ResNet50.yaml')
+# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/RGB_uoais_0518/model_final.pth")
 #
 # RGBD
-# cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/mixture_UCN.yaml')
-# weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/rgbd_finetuned/norm_RGBD_finetuned_data04_OCID_5epoch.pth")
+cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/UOAIS_UCN.yaml')
+weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/RGB_uoais_0518_RGBD/model_0005627.pth")
 #
 #
 cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_mixture_UCN.yaml")
@@ -91,16 +92,20 @@ if __name__ == "__main__":
     # cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
     # weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
     # ocid_dataset = OCIDDataset(image_set="test")
-    osd_dataset = OSDObject(image_set="test")
+    # osd_dataset = OSDObject(image_set="test")
+    osd_dataset = OSDObject_UOAIS(image_set="test")
+    # print(osd_dataset[0]['depth'])
     # pushing_dataset = PushingDataset("test")
     uoais_dataset = UOAIS_Dataset("train")
     predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
                                    weight_path=weight_path_MSMFormer,
-                                   input_image = "COLOR"
+                                   # input_image = "COLOR"
                                    )
 
     # test_sample(cfg, uoais_dataset[0], predictor, visualization=True)
-    test_sample(cfg, osd_dataset[0], predictor, visualization=True)
+    for i in range(10, 30):
+        test_sample(cfg, osd_dataset[i], predictor, visualization=True, topk=False, confident_score=0.4)
+    # test_dataset(cfg, osd_dataset, predictor)
 
     # predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
     #                                weight_path=weight_path_MSMFormer,
