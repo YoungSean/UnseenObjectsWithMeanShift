@@ -143,6 +143,8 @@ class  UOAIS_Dataset(data.Dataset, datasets.imdb):
             )
 
         imgs_anns = list(zip(imgs, anns))
+        # only use the TableTop part
+        imgs_anns = imgs_anns[22500:]
         self.imgs_anns = imgs_anns
         logger.info("Loaded {} images in COCO format from {}".format(len(imgs_anns), json_file))
 
@@ -492,6 +494,7 @@ if __name__ == "__main__":
 
     logger = setup_logger(name=__name__)
     dataset = UOAIS_Dataset()
+    print(dataset[0]["file_name"])
 
 
     # assert sys.argv[3] in DatasetCatalog.list()

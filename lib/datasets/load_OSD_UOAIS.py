@@ -155,17 +155,18 @@ class OSDObject_UOAIS(data.Dataset, datasets.imdb):
         # BGR image
         filename = self.image_files[idx]
         im = cv2.imread(filename)
+        # im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
         # if cfg.TRAIN.CHROMATIC and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
         #     im = chromatic_transform(im)
         # if cfg.TRAIN.ADD_NOISE and cfg.MODE == 'TRAIN' and np.random.rand(1) > 0.1:
         #     im = add_noise(im)
-        im_tensor = torch.from_numpy(im) / 255.0
+        # im_tensor = torch.from_numpy(im) / 255.0
 
-        im_tensor_bgr = im_tensor.clone()
-        im_tensor_bgr = im_tensor_bgr.permute(2, 0, 1)
+        # im_tensor_bgr = im_tensor.clone()
+        # im_tensor_bgr = im_tensor_bgr.permute(2, 0, 1)
 
-        im_tensor -= self._pixel_mean
-        image_blob = im_tensor.permute(2, 0, 1)
+        # im_tensor -= self._pixel_mean
+        # image_blob = im_tensor.permute(2, 0, 1)
 
         # Label
         labels_filename = filename.replace('image_color', 'annotation')
@@ -175,10 +176,11 @@ class OSDObject_UOAIS(data.Dataset, datasets.imdb):
 
         index = filename.find('OSD')
         # use coco mean and std
-        if cfg.INPUT == 'COLOR':
-            image_blob = (torch.from_numpy(im).permute(2, 0, 1) - torch.Tensor([123.675, 116.280, 103.530]).view(-1, 1, 1).float()) / torch.Tensor([58.395, 57.120, 57.375]).view(-1, 1, 1).float()
+        # if cfg.INPUT == 'COLOR':
+        im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+        image_blob = (torch.from_numpy(im).permute(2, 0, 1) - torch.Tensor([123.675, 116.280, 103.530]).view(-1, 1, 1).float()) / torch.Tensor([58.395, 57.120, 57.375]).view(-1, 1, 1).float()
         sample = {'image_color': image_blob,
-                  'image_color_bgr': im_tensor_bgr,
+                #   'image_color_bgr': im_tensor_bgr,
                   'label': label_blob,
                   'filename': filename[index+4:],
                   'file_name': filename,
@@ -191,7 +193,7 @@ class OSDObject_UOAIS(data.Dataset, datasets.imdb):
         depth_path= filename.replace('image_color', 'disparity')
         depth_img = imageio.imread(depth_path)
         depth_img = normalize_depth(depth_img)
-        depth_img = inpaint_depth(depth_img) / 255.0
+        depth_img = inpaint_depth(depth_img) / 255.0 # range [-1, 1]
         # print(depth_img.shape)
         depth_img = torch.from_numpy(depth_img).permute(2, 0, 1).float()
         sample['depth'] = depth_img

@@ -27,7 +27,7 @@ import cv2 as cv
 from matplotlib import pyplot as plt
 from nms import nms
  
-USE_NMS = True # "True" is used for real world images. Generally, we set it as False.
+USE_NMS = False # "True" is used for real world images. Generally, we set it as False.
 
 
 # Reference: https://www.reddit.com/r/computervision/comments/jb6b18/get_binary_mask_image_from_detectron2/

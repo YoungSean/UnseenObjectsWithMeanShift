@@ -12,6 +12,7 @@ from .pushing_dataset import PushingDataset
 from .mixture_dataset import MixtureDataset
 from .uoais_dataset import UOAIS_Dataset
 from .load_OSD_UOAIS import OSDObject_UOAIS
+from .load_OCID_UOAIS import OCIDDataset_UOAIS
 
 import os.path as osp
 ROOT_DIR = osp.join(osp.dirname(__file__), '..', '..')

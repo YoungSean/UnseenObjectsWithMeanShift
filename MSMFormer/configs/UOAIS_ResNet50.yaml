@@ -1,17 +1,16 @@
 _BASE_: Base-COCO-InstanceSegmentation.yaml
 OUTPUT_DIR: "./output_norm"
 SOLVER:
-  IMS_PER_BATCH: 2 # set batch size is 4
+  IMS_PER_BATCH: 4 # set batch size is 4
   BASE_LR: 0.0001
-  MAX_ITER: 2000  # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
-  CHECKPOINT_PERIOD: 1000 # save a checkpoint every 1/4 epoch
+  MAX_ITER: 90100  # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
+  CHECKPOINT_PERIOD: 5624 # save a checkpoint every 1/4 epoch
 INPUT:
   MASK_FORMAT: "bitmask"
   MIN_SIZE_TRAIN: (480,)
-  #MIN_SIZE_TEST: (480,)
-  MAX_SIZE_TRAIN: 800
-  MAX_SIZE_TEST: 800
-  MIN_SIZE_TEST: 0
+  MAX_SIZE_TRAIN: 640
+  MAX_SIZE_TEST: 640
+  # MIN_SIZE_TEST: (480,)
   DATASET_MAPPER_NAME: "unseen_instance"
   RANDOM_FLIP: "none"
   #INPUT_IMAGE: 'RGB'
@@ -19,7 +18,17 @@ DATASETS:
   TRAIN: ("uoais_object_train",)
   TEST: ()
 MODEL:
-  WEIGHTS: ""
+  # use ResNet101
+  # WEIGHTS: "R-101.pkl"
+  # RESNETS:
+  #   DEPTH: 101
+  #   STEM_TYPE: "basic"  # not used
+  #   STEM_OUT_CHANNELS: 64
+  #   STRIDE_IN_1X1: False
+  #   OUT_FEATURES: ["res2", "res3", "res4", "res5"]
+  #   # NORM: "SyncBN"
+  #   RES5_MULTI_GRID: [1, 1, 1]  # not used
+  # WEIGHTS: ""
   USE_DEPTH: False 
   USE_OTHER_BACKBONE: True 
   MASK_ON: True

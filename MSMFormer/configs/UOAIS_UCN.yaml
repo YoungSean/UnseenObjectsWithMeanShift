@@ -1,16 +1,16 @@
 _BASE_: Base-COCO-InstanceSegmentation.yaml
 OUTPUT_DIR: "./output_norm"
 SOLVER:
-  IMS_PER_BATCH: 1 # set batch size is 4
+  IMS_PER_BATCH: 4 # set batch size is 4
   BASE_LR: 0.0001
-  MAX_ITER: 4000  # 70000 iterations is a whole epoch. If detectron2 could not finish at 71000th iteration, could use 70000th iteration checkpoint.
-  CHECKPOINT_PERIOD: 1000 # save a checkpoint every 1/4 epoch
+  MAX_ITER: 90000  # 11250 iterations is a whole epoch. If detectron2 could not finish at 11250th iteration, could use 11750th iteration checkpoint.
+  CHECKPOINT_PERIOD: 5624 # save a checkpoint every 1/8 epoch
 INPUT:
   MASK_FORMAT: "bitmask"
   MIN_SIZE_TRAIN: (480,)
   #MIN_SIZE_TEST: (480,)
-  MAX_SIZE_TRAIN: 800
-  MAX_SIZE_TEST: 800
+  MAX_SIZE_TRAIN: 640
+  MAX_SIZE_TEST: 640
   MIN_SIZE_TEST: 0
   DATASET_MAPPER_NAME: "unseen_instance"
   RANDOM_FLIP: "none"
