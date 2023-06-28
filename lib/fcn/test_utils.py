@@ -46,7 +46,9 @@ def get_confident_instances(outputs, topk=False, score=0.7, num_class=2, low_thr
             return confident_instances
         else:
             return instances
-    confident_instances = instances[instances.scores > score]
+    index = instances.scores > score
+    index = index.to("cpu")
+    confident_instances = instances[index]
     return confident_instances
     
 
