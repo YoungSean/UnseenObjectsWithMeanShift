@@ -76,6 +76,12 @@ python -m pip uninstall numpy
 python -m pip install numpy==1.23.1
 ```
 
+If there is an error like ModuleNotFoundError: No module named 'MultiScaleDeformableAttention', try to compile [MultiScaleDeformableAttention CUDA](https://github.com/facebookresearch/Mask2Former/blob/main/INSTALL.md) op with the following commands:
+```shell
+cd meanshiftformer/modeling/pixel_decoder/ops
+sh make.sh
+```
+
 ### Download
 - Create a folder $ROOT/data/checkpoints
 - Download the pretrained backbone checkpoints from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering). They are *seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth* and *seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth*. 
