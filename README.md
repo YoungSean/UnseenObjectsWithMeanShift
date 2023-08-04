@@ -78,7 +78,7 @@ python -m pip install numpy==1.23.1
 
 If there is an error like ModuleNotFoundError: No module named 'MultiScaleDeformableAttention', try to compile [MultiScaleDeformableAttention CUDA](https://github.com/facebookresearch/Mask2Former/blob/main/INSTALL.md) op with the following commands:
 ```shell
-cd meanshiftformer/modeling/pixel_decoder/ops
+cd MSMFormer/meanshiftformer/modeling/pixel_decoder/ops
 sh make.sh
 ```
 
