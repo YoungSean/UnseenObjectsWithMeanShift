@@ -24,6 +24,7 @@ sys.path.append(os.path.dirname(__file__))
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 def get_backbone():
     num_classes = 2
+    # set your filepath for the UCN pretrained checkpoints
     pretrained = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth"
     # pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
     network_name = "seg_resnet34_8s_embedding"
@@ -74,6 +75,7 @@ def get_backbone():
 
 def get_backbone_crop():
     num_classes = 2
+    # set your filepath for the UCN pretrained checkpoints
     pretrained_crop = "/home/xy/yxl/UnseenForMeanShift/data/checkpoints/seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth"
     network_name = "seg_resnet34_8s_embedding"
 
