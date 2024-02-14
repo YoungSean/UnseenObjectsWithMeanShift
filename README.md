@@ -85,7 +85,7 @@ sh make.sh
 
 ### Download
 - Create a folder $ROOT/data/checkpoints
-- Download the pretrained backbone checkpoints from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering). They are *seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth* and *seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth*. 
+- Download the [pretrained backbone checkpoints](https://utdallas.app.box.com/s/9vt68miar920hf36egeybfflzvt8c676) from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering). They are *seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth* and *seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth*. 
 Then move the checkpoint files into $ROOT/data/checkpoints. 
 - Download our trained checkpoints from [RGBD weights](https://utdallas.box.com/s/e93nx0gj3x38so4o3zj3p9fzo3pvwqgy) and [RGB weights](https://utdallas.box.com/s/4bqiadd1rjb4s7x1qocha5gp9kh91tyj). [These weights](https://utdallas.box.com/s/hrxs73d755x1j1zwafpgc9d8unisdyj8) are trained with UOAIS datasets. Then move the checkpoint files into $ROOT/data/checkpoints.
 - Download our fine-tuned checkpoints from [here](https://utdallas.box.com/s/vzp8nmalowg4i58y8b9sghv5s7f36xpz) (No login needed). The model is finetuned by [a dataset from robot interaction](https://utdallas.app.box.com/s/yipcemru6qsbw0wj1nsdxq1dw5mjbtiq).
