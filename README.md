@@ -3,7 +3,7 @@
 This repository includes: Mean Shift Mask Transformer and its finetuned version with long-term robot interaction.
 
 ## Mean Shift Mask Transformer for Unseen Object Instance Segmentation
-
+### International Conference on Robotics and Automation (ICRA), 2024.
 ### Introduction
 Segmenting unseen objects is a critical task in many different domains. For example, a robot may need to grasp an unseen object, which means it needs to visually separate this object from the background and/or other objects. Mean shift clustering is a common method in object segmentation tasks. However, the traditional mean shift clustering algorithm is not easily integrated into an end-to-end neural network training pipeline. In this work, we propose the Mean Shift Mask Transformer (MSMFormer), a new transformer architecture that simulates the von Mises-Fisher (vMF) mean shift clustering algorithm, allowing for the joint training and inference of both the feature extractor and the clustering. Its central component is a hypersphere attention mechanism, which updates object queries on a hypersphere. To illustrate the effectiveness of our method, we apply MSMFormer to Unseen Object Instance Segmentation, which yields a new state-of-the-art of 87.3 Boundary F-measure on the real-world Object Clutter Indoor Dataset (OCID).
 [arXiv](https://arxiv.org/abs/2211.11679)  [project](https://irvlutd.github.io/MSMFormer/)
@@ -30,6 +30,7 @@ If you find Mean Shift Mask Transformer useful in your research, please consider
 }
 ```
 ## Self-Supervised Unseen Object Instance Segmentation via Long-Term Robot Interaction
+### In Robotics: Science and Systems (RSS), 2023.
 ### Introduction
 We introduce a novel robotic system for improving unseen object instance segmentation in the real world by leveraging long-term robot interaction with objects. Previous approaches either grasp or push an object and then obtain the segmentation mask of the grasped or pushed object after one action. Instead, our system defers the decision on segmenting objects after a sequence of robot pushing actions. By applying multi-object tracking and video object segmentation on the images collected via robot pushing, our system can generate segmentation masks of all the objects in these images in a self-supervised way. These include images where objects are very close to each other, and segmentation errors usually occur on these images for existing object segmentation networks. We demonstrate the usefulness of our system by fine-tuning segmentation networks trained on synthetic data with real-world data collected by our system. We show that, after fine-tuning, the segmentation accuracy of the networks is significantly improved both in the same domain and across different domains. In addition, we verify that the fine-tuned networks improve top-down robotic grasping of unseen objects in the real world.
 [arXiv](https://arxiv.org/abs/2302.03793) [project](https://irvlutd.github.io/SelfSupervisedSegmentation/)
@@ -76,11 +77,20 @@ python -m pip uninstall numpy
 python -m pip install numpy==1.23.1
 ```
 
+If there is an error like ModuleNotFoundError: No module named 'MultiScaleDeformableAttention', try to compile [MultiScaleDeformableAttention CUDA](https://github.com/facebookresearch/Mask2Former/blob/main/INSTALL.md) op with the following commands:
+```shell
+cd MSMFormer/meanshiftformer/modeling/pixel_decoder/ops
+sh make.sh
+```
+
 ### Download
 - Create a folder $ROOT/data/checkpoints
-- Download the pretrained backbone checkpoints from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering). They are *seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth* and *seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth*. 
+- Download the [pretrained backbone checkpoints](https://utdallas.app.box.com/s/9vt68miar920hf36egeybfflzvt8c676) from [UCN](https://github.com/IRVLUTD/UnseenObjectClustering). They are *seg_resnet34_8s_embedding_cosine_rgbd_add_sampling_epoch_16.checkpoint.pth* and *seg_resnet34_8s_embedding_cosine_rgbd_add_crop_sampling_epoch_16.checkpoint.pth*. 
 Then move the checkpoint files into $ROOT/data/checkpoints. 
-- Download our trained checkpoints from [here](https://utdallas.box.com/s/e93nx0gj3x38so4o3zj3p9fzo3pvwqgy). Then move the checkpoint files into $ROOT/data/checkpoints.
+- Download our trained checkpoints
+  - Weights Trained with TableTop Object Dataset and Config files: [RGBD weights](https://utdallas.box.com/s/e93nx0gj3x38so4o3zj3p9fzo3pvwqgy) and [RGB weights](https://utdallas.box.com/s/4bqiadd1rjb4s7x1qocha5gp9kh91tyj).
+  - Weights Trained with UOAIS dataset: [RGB and RGBD weights](https://utdallas.box.com/s/hrxs73d755x1j1zwafpgc9d8unisdyj8). Config files can be found from the above TableTop weight links. You may change the weight path in the config files before inference.
+  - After downloading weights, move the checkpoint files into $ROOT/data/checkpoints.
 - Download our fine-tuned checkpoints from [here](https://utdallas.box.com/s/vzp8nmalowg4i58y8b9sghv5s7f36xpz) (No login needed). The model is finetuned by [a dataset from robot interaction](https://utdallas.app.box.com/s/yipcemru6qsbw0wj1nsdxq1dw5mjbtiq).
 
 ### Training on the Tabletop Object Dataset (TOD)

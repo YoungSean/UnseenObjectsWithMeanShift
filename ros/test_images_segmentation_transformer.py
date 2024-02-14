@@ -24,13 +24,12 @@ import numpy as np
 import _init_paths
 import networks
 import rospy
+import ros_numpy
 import copy
 import scipy.io
-import ros_numpy
 
 from utils.blob import pad_im
 from sensor_msgs.msg import Image, CameraInfo
-from cv_bridge import CvBridge, CvBridgeError
 from fcn.config import cfg, cfg_from_file, get_output_dir
 from fcn.test_dataset import test_sample
 from fcn.test_demo import get_predictor, get_predictor_crop
@@ -56,7 +55,6 @@ class ImageListener:
         self.predictor_crop = predictor_crop
         self.cfg_transformer = cfg_transformer
         self.cfg_transformer_crop = cfg_transformer_crop
-        self.cv_bridge = CvBridge()
 
         self.im = None
         self.depth = None
@@ -180,7 +178,7 @@ class ImageListener:
 
         # publish segmentation mask
         label = out_label[0].cpu().numpy()
-        label_msg = ros_numpy.msgify(Image, label.astype(np.uint8), encoding='mono8')
+        label_msg = ros_numpy.msgify(Image, label.astype(np.uint8), 'mono8')
         label_msg.header.stamp = rgb_frame_stamp
         label_msg.header.frame_id = rgb_frame_id
         label_msg.encoding = 'mono8'
@@ -188,7 +186,7 @@ class ImageListener:
         
         # publish score map
         score = out_score[0].cpu().numpy()
-        label_msg = ros_numpy.msgify(Image, score.astype(np.uint8), encoding='mono8')
+        label_msg = ros_numpy.msgify(Image, score.astype(np.uint8), 'mono8')
         label_msg.header.stamp = rgb_frame_stamp
         label_msg.header.frame_id = rgb_frame_id
         label_msg.encoding = 'mono8'
@@ -199,7 +197,7 @@ class ImageListener:
 
         if out_label_refined is not None:
             label_refined = out_label_refined
-            label_msg_refined = ros_numpy.msgify(Image, label_refined.astype(np.uint8), encoding='mono8')
+            label_msg_refined = ros_numpy.msgify(Image, label_refined.astype(np.uint8), 'mono8')
             label_msg_refined.header.stamp = rgb_frame_stamp
             label_msg_refined.header.frame_id = rgb_frame_id
             label_msg_refined.encoding = 'mono8'
@@ -217,14 +215,14 @@ class ImageListener:
             y2 = int(bbox[i, 3])
             # cv2.rectangle(im_label, (x1, y1), (x2, y2), (0, 255, 0), 2)
             cv2.putText(im_label, "%.2f" % bbox[i, 4], (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
-        rgb_msg = ros_numpy.msgify(Image, im_label, encoding='rgb8')
+        rgb_msg = ros_numpy.msgify(Image, im_label, 'rgb8')
         rgb_msg.header.stamp = rgb_frame_stamp
         rgb_msg.header.frame_id = rgb_frame_id
         self.image_pub.publish(rgb_msg)
 
         if out_label_refined is not None:
             im_label_refined = visualize_segmentation(im_color[:, :, (2, 1, 0)], label_refined, return_rgb=True)
-            rgb_msg_refined = ros_numpy.msgify(Image, im_label_refined, encoding='rgb8')
+            rgb_msg_refined = ros_numpy.msgify(Image, im_label_refined, 'rgb8')
             rgb_msg_refined.header.stamp = rgb_frame_stamp
             rgb_msg_refined.header.frame_id = rgb_frame_id
             self.image_refined_pub.publish(rgb_msg_refined)
