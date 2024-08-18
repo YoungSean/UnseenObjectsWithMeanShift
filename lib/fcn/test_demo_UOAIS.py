@@ -18,6 +18,7 @@ from tabletop_config import add_tabletop_config
 from datasets.pushing_dataset import PushingDataset
 from datasets.uoais_dataset import UOAIS_Dataset
 from datasets.load_OSD_UOAIS import OSDObject_UOAIS
+from datasets.load_OCID_UOAIS import OCIDDataset_UOAIS
 
 # ignore some warnings
 import warnings
@@ -31,6 +32,7 @@ dirname = os.path.dirname(__file__)
 
 # # RGB
 # cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/mixture_ResNet50.yaml')
+# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/uoais_0529_RGB_dataAug/model_0039395.pth")
 # weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/output_1229_Res50_learn_10dec/model_0017499.pth") 
 # weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/norm_0111_RGB_mixture2_updated/model_0000319.pth")
 
@@ -39,7 +41,7 @@ weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/OSD_RGB_MS
 #
 # RGBD
 # cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/UOAIS_UCN.yaml')
-# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/RGBD_0519_raw_lr3/model_0008441.pth")
+# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/uoais_0531_RGBD_dataAug_depth01/model_0039367.pth")
 #
 #
 cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_mixture_UCN.yaml")
@@ -94,9 +96,11 @@ if __name__ == "__main__":
     # ocid_dataset = OCIDDataset(image_set="test")
     # osd_dataset = OSDObject(image_set="test")
     osd_dataset = OSDObject_UOAIS(image_set="test")
+    ocid_dataset = OCIDDataset_UOAIS(image_set="test")
+    # print(ocid_dataset[0])
     # print(osd_dataset[0]['depth'])
     # pushing_dataset = PushingDataset("test")
-    uoais_dataset = UOAIS_Dataset("train")
+    # uoais_dataset = UOAIS_Dataset("train")
     predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
                                    weight_path=weight_path_MSMFormer,
                                    input_image = "COLOR"
@@ -105,7 +109,14 @@ if __name__ == "__main__":
     # test_sample(cfg, uoais_dataset[0], predictor, visualization=True)
     # for i in range(10, 20):
     #     test_sample(cfg, osd_dataset[i], predictor, visualization=True, topk=False, confident_score=0.7)
+    # test ocid
     test_dataset(cfg, osd_dataset, predictor)
+    # test_dataset(cfg, ocid_dataset, predictor)
+
+
+
+
+
 
     # predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
     #                                weight_path=weight_path_MSMFormer,

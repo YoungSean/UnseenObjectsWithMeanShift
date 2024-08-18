@@ -207,6 +207,7 @@ if __name__ == '__main__':
     else:
         network_crop = None
 
+    # cfg.TEST.VISUALIZE = True
     if cfg.TEST.VISUALIZE:
         index_images = np.random.permutation(len(images_color))
     else:

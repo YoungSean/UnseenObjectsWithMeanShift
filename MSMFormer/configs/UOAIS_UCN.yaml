@@ -1,0 +1,79 @@
+_BASE_: Base-COCO-InstanceSegmentation.yaml
+OUTPUT_DIR: "./output_norm"
+SOLVER:
+  IMS_PER_BATCH: 4 # set batch size is 4
+  BASE_LR: 0.0001
+  MAX_ITER: 90000  # 11250 iterations is a whole epoch. If detectron2 could not finish at 11250th iteration, could use 11750th iteration checkpoint.
+  CHECKPOINT_PERIOD: 5624 # save a checkpoint every 1/8 epoch
+INPUT:
+  MASK_FORMAT: "bitmask"
+  MIN_SIZE_TRAIN: (480,)
+  #MIN_SIZE_TEST: (480,)
+  MAX_SIZE_TRAIN: 640
+  MAX_SIZE_TEST: 640
+  MIN_SIZE_TEST: 0
+  DATASET_MAPPER_NAME: "unseen_instance"
+  RANDOM_FLIP: "none"
+  #INPUT_IMAGE: 'RGB'
+DATASETS:
+  TRAIN: ("uoais_object_train",)
+  TEST: ()
+MODEL:
+  # WEIGHTS: "../data/checkpoints/output_1008_normal_BGR_model_0069999.pth"
+  USE_DEPTH: True  
+  USE_OTHER_BACKBONE: False 
+  MASK_ON: True
+  # PIXEL_MEAN: [102.9801, 115.9465, 122.7717]
+  META_ARCHITECTURE: "PretrainedMeanShiftMaskFormer"
+  EMBEDDING:
+    FEATURE_CROP: False
+    USE_LOSS: False
+  SEM_SEG_HEAD:
+    NAME: "PretrainedMeanShiftMaskFormerHead"
+    IGNORE_VALUE: 255
+    NUM_CLASSES: 2
+    LOSS_WEIGHT: 1.0
+    CONVS_DIM: 64
+    MASK_DIM: 256 #256
+    NORM: "GN"
+    # pixel decoder
+    PIXEL_DECODER_NAME: "SimpleBasePixelDecoder"
+    IN_FEATURES: ["res5", ]
+    DEFORMABLE_TRANSFORMER_ENCODER_IN_FEATURES: ["res3", "res4", "res5"]
+    COMMON_STRIDE: 4
+    TRANSFORMER_ENC_LAYERS: 6
+  MASK_FORMER:
+    USE_MEANSHIFT_CROSS_ATTENTION: True  # if true, we use mean shift cross attention.
+    USE_MEANSHIFT_SELF_ATTENTION: True  # if true, we use mean shift self attention.
+    DISABLE_MEANSHIFT_ATTENTION_MASK: False  # if true, we do not use attention mask.
+    DECODER_BLOCK_NORM: True # if true, we normalize after each FFN of decoder blok. cross attention > self attention > FFN > normalization
+    TRANSFORMER_DECODER_NAME: "PretrainedMeanShiftTransformerDecoder"
+    TRANSFORMER_IN_FEATURE: "multi_scale_pixel_decoder"
+    DEEP_SUPERVISION: True
+    NO_OBJECT_WEIGHT: 0.1
+    CLASS_WEIGHT: 2.0
+    MASK_WEIGHT: 5.0
+    DICE_WEIGHT: 5.0
+    HIDDEN_DIM: 256
+    NUM_OBJECT_QUERIES: 100
+    NHEADS: 8
+    DROPOUT: 0.0
+    DIM_FEEDFORWARD: 2048
+    ENC_LAYERS: 0
+    PRE_NORM: False
+    ENFORCE_INPUT_PROJ: False
+    SIZE_DIVISIBILITY: 32
+    DEC_LAYERS: 7  # =1+k, means that k decoder layers, add one for the loss on learnable query
+    TRAIN_NUM_POINTS: 12544
+    OVERSAMPLE_RATIO: 3.0
+    IMPORTANCE_SAMPLE_RATIO: 0.75
+    TEST:
+      SEMANTIC_ON: False
+      INSTANCE_ON: True
+      PANOPTIC_ON: False
+      OVERLAP_THRESHOLD: 0.8
+      OBJECT_MASK_THRESHOLD: 0.8
+TEST:
+  DETECTIONS_PER_IMAGE: 40  # change from 20 to 40
+  EVAL_PERIOD: 0
+CUDNN_BENCHMARK: True
