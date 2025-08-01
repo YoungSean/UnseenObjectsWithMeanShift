@@ -16,38 +16,23 @@ from detectron2.projects.deeplab import add_deeplab_config
 from detectron2.config import get_cfg
 from tabletop_config import add_tabletop_config
 from datasets.pushing_dataset import PushingDataset
-<<<<<<< HEAD
-from PIL import Image
-=======
 from datasets.uoais_dataset import UOAIS_Dataset
 from datasets.load_OSD_UOAIS import OSDObject_UOAIS
->>>>>>> d1c848758df84a7df0dd889bfd50ffd91747a028
+from datasets.load_OCID_UOAIS import OCIDDataset_UOAIS
 
-from utils.evaluation import multilabel_metrics
 # ignore some warnings
 import warnings
 import torch
 from config import cfg
 warnings.simplefilter("ignore", UserWarning)
-from test_utils import test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD, test_sample_crop_nolabel, get_result_from_network
+from test_utils import test_dataset, test_sample, test_sample_crop, test_dataset_crop, Network_RGBD, test_sample_crop_nolabel
 
 dirname = os.path.dirname(__file__)
 
 
 # # RGB
-<<<<<<< HEAD
-cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/tabletop_pretrained_ResNet50.yaml')
-weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/tabletop_rgb/norm_RGB_pretrained.pth") 
-# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/norm_0111_RGB_mixture2_updated/model_0000319.pth") 
-
-# # RGBD
-# cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/mixture_UCN.yaml')
-# weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/rgbd_finetuned/norm_RGBD_finetuned_data04_OCID_5epoch.pth")
-
-# cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_mixture_UCN.yaml")
-# weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/rgbd_pretrain/crop_RGBD_pretrained.pth")
-=======
 # cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/mixture_ResNet50.yaml')
+# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/uoais_0529_RGB_dataAug/model_0039395.pth")
 # weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/output_1229_Res50_learn_10dec/model_0017499.pth") 
 # weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/norm_0111_RGB_mixture2_updated/model_0000319.pth")
 
@@ -56,12 +41,11 @@ weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/OSD_RGB_MS
 #
 # RGBD
 # cfg_file_MSMFormer = os.path.join(dirname, '../../MSMFormer/configs/UOAIS_UCN.yaml')
-# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/RGBD_0519_raw_lr3/model_0008441.pth")
+# weight_path_MSMFormer = os.path.join(dirname, "../../MSMFormer/uoais_0531_RGBD_dataAug_depth01/model_0039367.pth")
 #
 #
 cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_mixture_UCN.yaml")
 weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/rgbd_pretrain/crop_RGBD_pretrained.pth")
->>>>>>> d1c848758df84a7df0dd889bfd50ffd91747a028
 
 def get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD"):
     cfg = get_cfg()
@@ -86,10 +70,11 @@ def get_general_predictor(cfg_file, weight_path, input_image="RGBD_ADD"):
 def get_predictor(cfg_file=cfg_file_MSMFormer, weight_path=weight_path_MSMFormer, input_image="RGBD_ADD"):
     return get_general_predictor(cfg_file, weight_path, input_image=input_image)
 
-# def get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop, weight_path=weight_path_MSMFormer_crop, input_image="RGBD_ADD"):
-#     return get_general_predictor(cfg_file, weight_path, input_image=input_image)
+def get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop, weight_path=weight_path_MSMFormer_crop, input_image="RGBD_ADD"):
+    return get_general_predictor(cfg_file, weight_path, input_image=input_image)
 
 # set datasets
+
 # use_my_dataset = True
 # for d in ["train", "test"]:
 #     if use_my_dataset:
@@ -99,7 +84,6 @@ def get_predictor(cfg_file=cfg_file_MSMFormer, weight_path=weight_path_MSMFormer
 
 metadata = MetadataCatalog.get("tabletop_object_train")
 
-mask_save_root = os.path.join('/media/gpuadmin/rcao/result/uois/ocid', 'msmformer_mask')
 
 if __name__ == "__main__":
     # Here you can set the paths for networks
@@ -109,79 +93,30 @@ if __name__ == "__main__":
     # weight_path_MSMFormer = os.path.join(dirname, "../../data/checkpoints/norm_model_0069999.pth")
     # cfg_file_MSMFormer_crop = os.path.join(dirname, "../../MSMFormer/configs/crop_tabletop_pretrained.yaml")
     # weight_path_MSMFormer_crop = os.path.join(dirname, "../../data/checkpoints/crop_dec9_model_final.pth")
-<<<<<<< HEAD
-    ocid_dataset = OCIDDataset(image_set="test")
-    # osd_dataset = OSDObject(image_set="test")
-    # pushing_dataset = PushingDataset("test")
-    dataloader = torch.utils.data.DataLoader(ocid_dataset, batch_size=1, shuffle=False, num_workers=0)
-    
-=======
     # ocid_dataset = OCIDDataset(image_set="test")
     # osd_dataset = OSDObject(image_set="test")
     osd_dataset = OSDObject_UOAIS(image_set="test")
+    ocid_dataset = OCIDDataset_UOAIS(image_set="test")
+    # print(ocid_dataset[0])
     # print(osd_dataset[0]['depth'])
     # pushing_dataset = PushingDataset("test")
-    uoais_dataset = UOAIS_Dataset("train")
->>>>>>> d1c848758df84a7df0dd889bfd50ffd91747a028
+    # uoais_dataset = UOAIS_Dataset("train")
     predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
                                    weight_path=weight_path_MSMFormer,
                                    input_image = "COLOR"
                                    )
 
-<<<<<<< HEAD
-    # predictor_crop, cfg_crop = get_predictor_crop(cfg_file=cfg_file_MSMFormer_crop,
-    #                                               weight_path=weight_path_MSMFormer_crop)
-    results =[]
-    for sample_idx, sample in enumerate(dataloader):
-
-        image_path = sample['filename'][0]
-        image_name = os.path.basename(image_path).split('.')[0]
-        image_dir = os.path.join(*os.path.dirname(image_path).split('/')[1:-1])
-        
-        # Example of predicting and visualizing samples from OCID and OSD dataset
-        # pred_mask, metrics, metrics_refined = test_sample_crop(cfg, sample, predictor, None, visualization=False, topk=False, confident_score=0.7, print_result=True)
-        # test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
-        
-        image = sample['image_color'].cuda() # for future crop
-        pred_mask = get_result_from_network(cfg, image, None, None, predictor, False, 0.7, 0.4, False)
-        gt_mask = sample["label"].squeeze().numpy()
-        eval_metrics = multilabel_metrics(pred_mask.astype(np.uint8), gt_mask)
-        print("file name: ", image_name)
-        print("first:", eval_metrics)
-        
-        result = np.zeros(7)
-        result[0] = eval_metrics['Objects F-measure']
-        result[1] = eval_metrics['Objects Precision']
-        result[2] = eval_metrics['Objects Recall']
-        result[3] = eval_metrics['Boundary F-measure']
-        result[4] = eval_metrics['Boundary Precision']
-        result[5] = eval_metrics['Boundary Recall']
-        result[6] = eval_metrics['obj_detected_075_percentage']
-        results.append(result)
-        
-        print("Data type of pred_mask:", pred_mask.dtype)  # 打印数据类型
-        print("Shape of pred_mask:", pred_mask.shape)      # 打印形状
-        print("Minimum value in pred_mask:", np.min(pred_mask))  # 打印最小值
-        print("Maximum value in pred_mask:", np.max(pred_mask))  # 打印最大值
-        print("Unique values in pred_mask:", np.unique(pred_mask))  # 打印所有独特的值
-
-        # pred_mask = (pred_mask / np.max(pred_mask)) * 255
-        # result = Image.fromarray(pred_mask.astype(np.uint8))
-        # mask_save_path = os.path.join(mask_save_root, image_dir)
-        # os.makedirs(mask_save_path, exist_ok=True)
-        # result.save(os.path.join(mask_save_path, '{}.png'.format(image_name)))
-
-    results = np.stack(results, axis=0)
-    print('Overlap Prec:{}, Rec:{}, F_score:{}, Boundary Prec:{}, Rec:{}, F_score:{}, %75:{}'. \
-    format(np.mean(results[:, 1]), np.mean(results[:, 2]), np.mean(results[:, 0]),
-            np.mean(results[:, 4]), np.mean(results[:, 5]), np.mean(results[:, 3]), np.mean(results[:, 6])))
-    # np.save('OCID_msmformer_rgb_results_new.npy', results)
-    
-=======
     # test_sample(cfg, uoais_dataset[0], predictor, visualization=True)
     # for i in range(10, 20):
     #     test_sample(cfg, osd_dataset[i], predictor, visualization=True, topk=False, confident_score=0.7)
+    # test ocid
     test_dataset(cfg, osd_dataset, predictor)
+    # test_dataset(cfg, ocid_dataset, predictor)
+
+
+
+
+
 
     # predictor, cfg = get_predictor(cfg_file=cfg_file_MSMFormer,
     #                                weight_path=weight_path_MSMFormer,
@@ -195,7 +130,6 @@ if __name__ == "__main__":
     # # metrics, metrics_refined = test_sample_crop(cfg, ocid_dataset[10], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
     # test_sample_crop(cfg, osd_dataset[5], predictor, predictor_crop, visualization=True, topk=False, confident_score=0.7, print_result=True)
 
->>>>>>> d1c848758df84a7df0dd889bfd50ffd91747a028
     # one stage model testing
     # test_dataset(cfg, pushing_dataset, predictor)
     # test_dataset(cfg, osd_dataset, predictor)
