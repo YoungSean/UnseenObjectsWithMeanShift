@@ -269,6 +269,7 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
         binary_mask, score_mask, bbox = combine_masks_with_NMS(confident_instances)
     else:
         binary_mask = combine_masks(confident_instances)
+
     metrics = multilabel_metrics(binary_mask, gt)
     if print_result:
         print("file name: ", sample["file_name"])
@@ -333,7 +334,7 @@ def test_sample_crop(cfg, sample, predictor, predictor_crop, visualization = Fal
         print("refined: ", metrics_refined)
         print("========")
 
-    return metrics, metrics_refined
+    return binary_mask, metrics, metrics_refined
 
 
 def test_sample_crop_nolabel(cfg, sample, predictor, predictor_crop, visualization = False, topk=False, confident_score=0.7, low_threshold=0.4, print_result=False):

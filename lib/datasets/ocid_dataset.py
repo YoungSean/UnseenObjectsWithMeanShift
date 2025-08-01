@@ -113,18 +113,17 @@ class OCIDDataset(data.Dataset, datasets.imdb):
                   }
 
         # Depth image
-        #if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
-        pcd_filename = filename.replace('rgb', 'pcd')
-        pcd_filename = pcd_filename.replace('png', 'pcd')
-        pcd = open3d.io.read_point_cloud(pcd_filename)
-        pcloud = np.asarray(pcd.points).astype(np.float32)
-        pcloud[np.isnan(pcloud)] = 0
-        xyz_img = pcloud.reshape((self._height, self._width, 3))
-        depth_blob = torch.from_numpy(xyz_img).permute(2, 0, 1)
-        # if we evaluate, use shape of (H W 3)
-        sample['depth'] = depth_blob
-        sample["raw_depth"] = xyz_img
-
+        if cfg.INPUT == 'DEPTH' or cfg.INPUT == 'RGBD':
+            pcd_filename = filename.replace('rgb', 'pcd')
+            pcd_filename = pcd_filename.replace('png', 'pcd')
+            pcd = open3d.io.read_point_cloud(pcd_filename)
+            pcloud = np.asarray(pcd.points).astype(np.float32)
+            pcloud[np.isnan(pcloud)] = 0
+            xyz_img = pcloud.reshape((self._height, self._width, 3))
+            depth_blob = torch.from_numpy(xyz_img).permute(2, 0, 1)
+            # if we evaluate, use shape of (H W 3)
+            sample['depth'] = depth_blob
+            sample["raw_depth"] = xyz_img
 
         return sample
 

@@ -14,7 +14,7 @@ INPUT:
   MIN_SIZE_TEST: 0
   DATASET_MAPPER_NAME: "unseen_instance"
   RANDOM_FLIP: "none"
-  #INPUT_IMAGE: 'RGB'
+  # INPUT_IMAGE: 'RGB'
 DATASETS:
   TRAIN: ("mixture_object_train",)
   TEST: ()
